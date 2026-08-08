@@ -1,0 +1,77 @@
+import type {Config} from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
+import {themes as prismThemes} from 'prism-react-renderer';
+
+const config: Config = {
+  title: 'Engineering Atlas',
+  tagline: 'A growing map of software engineering concepts and technologies',
+  favicon: 'img/favicon.svg',
+
+  url: 'https://example.com',
+  baseUrl: '/',
+
+  onBrokenLinks: 'throw',
+
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+  },
+
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  plugins: ['./plugins/engineering-atlas-taxonomy'],
+
+  presets: [
+    [
+      'classic',
+      {
+        docs: {
+          sidebarPath: './sidebars.ts',
+          routeBasePath: 'learn',
+        },
+        blog: false,
+        theme: {
+          customCss: './src/css/custom.css',
+        },
+      } satisfies Preset.Options,
+    ],
+  ],
+
+  themeConfig: {
+    navbar: {
+      title: 'Engineering Atlas',
+      items: [
+        {to: '/atlas', label: 'Atlas', position: 'left'},
+        {to: '/learn/intro', label: 'Learn', position: 'left'},
+        {
+          href: 'https://github.com/your-name/engineering-atlas',
+          label: 'GitHub',
+          position: 'right',
+        },
+      ],
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Explore',
+          items: [
+            {label: 'Interactive Atlas', to: '/atlas'},
+            {label: 'Content Library', to: '/learn/intro'},
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} Engineering Atlas.`,
+    },
+    prism: {
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
+    },
+  } satisfies Preset.ThemeConfig,
+};
+
+export default config;

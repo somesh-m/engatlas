@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cache Line Bouncing — Visual First v3</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0a0d13;
+      --panel: #111826;
+      --panel2: #0d131d;
+      --border: #273247;
+      --text: #eef3f8;
+      --muted: #8795a8;
+      --blue: #60a5fa;
+      --pink: #f472b6;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --green: #34d399;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 24px 14px 40px;
+    }
+
+    .wrap {
+      width: min(1180px, 100%);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.55rem, 3vw, 2.15rem);
+      letter-spacing: -.03em;
+    }
+
+    .sub {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: .96rem;
+    }
+
+    .sub strong {
+      color: #fff;
+    }
+
+    .card {
+      background: #0f151f;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .35);
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: #111925;
+    }
+
+    button {
+      border: 1px solid #344158;
+      background: #1a2432;
+      color: #dce5f0;
+      border-radius: 9px;
+      padding: 8px 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #222f40;
+    }
+
+    button.primary {
+      background: #223b72;
+      border-color: #365a9e;
+      color: #c9d8ff;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    .readout {
+      font: 800 .76rem ui-monospace, monospace;
+      color: #95a2b5;
+    }
+
+    .readout b {
+      color: #fff;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 530px;
+      background: radial-gradient(circle at 50% 45%, rgba(96, 165, 250, .08), transparent 30%), #080c12;
+      display: grid;
+      grid-template-columns: 1fr 320px 1fr;
+      gap: 54px;
+      align-items: center;
+      padding: 72px 38px 36px;
+      overflow: hidden;
+    }
+
+    .banner {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid #33445c;
+      background: #121b27;
+      color: #e4ecf5;
+      font: 900 .82rem ui-monospace, monospace;
+      letter-spacing: .03em;
+      white-space: nowrap;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, .24);
+    }
+
+    .banner.warn {
+      border-color: #873238;
+      background: #211214;
+      color: #ffb7bb;
+    }
+
+    .banner.move {
+      border-color: #86621c;
+      background: #21190a;
+      color: #ffd98a;
+    }
+
+    .banner.ok {
+      border-color: #276348;
+      background: #0f2018;
+      color: #96ecc6;
+    }
+
+    .core {
+      position: relative;
+      z-index: 5;
+      background: #111926;
+      border: 1px solid #28354a;
+      border-radius: 16px;
+      padding: 17px;
+      min-width: 0;
+      transition: .22s ease;
+    }
+
+    .core.owner {
+      border-color: #8f641e;
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, .38), 0 0 34px rgba(245, 158, 11, .12);
+    }
+
+    .core.blocked {
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, .55), 0 0 30px rgba(239, 68, 68, .16);
+    }
+
+    .core.receive {
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, .50), 0 0 30px rgba(52, 211, 153, .14);
+    }
+
+    .core-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #202b3c;
+      padding-bottom: 11px;
+      margin-bottom: 14px;
+    }
+
+    .core-title {
+      font-weight: 900;
+      font-size: 1.05rem;
+      color: var(--blue);
+    }
+
+    .right .core-title {
+      color: var(--pink);
+    }
+
+    .thread {
+      font: 800 .67rem ui-monospace, monospace;
+      color: #a4b0c2;
+      background: #192434;
+      border: 1px solid #2a3a51;
+      border-radius: 6px;
+      padding: 4px 7px;
+    }
+
+    .op-box {
+      position: relative;
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      border-radius: 14px;
+      border: 2px dashed #2d3a4f;
+      background: #0b111a;
+      overflow: hidden;
+    }
+
+    .op-box.active {
+      border-style: solid;
+      border-color: #9a6d20;
+      background: #191207;
+      box-shadow: 0 0 24px rgba(245, 158, 11, .14);
+    }
+
+    .op-box.trying {
+      border-style: solid;
+      border-color: #823237;
+      background: #1c1012;
+      box-shadow: 0 0 24px rgba(239, 68, 68, .14);
+    }
+
+    .op-code {
+      font: 900 1.9rem ui-monospace, monospace;
+      letter-spacing: .01em;
+      color: #e6edf7;
+    }
+
+    .blocked-label {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: #5a1d21;
+      color: #ffbcc0;
+      border: 1px solid #96393f;
+      border-radius: 7px;
+      padding: 4px 8px;
+      font: 900 .72rem ui-monospace, monospace;
+      opacity: 0;
+      transform: scale(.8);
+    }
+
+    .op-box.trying .blocked-label {
+      animation: blockPop .8s ease forwards;
+    }
+
+    .cache-label {
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .11em;
+      font-weight: 900;
+      color: #68788f;
+      margin-bottom: 7px;
+    }
+
+    .cache {
+      background: #0b1119;
+      border: 1px solid #334158;
+      border-radius: 12px;
+      padding: 12px;
+      transition: .25s ease;
+    }
+
+    .cache.mod {
+      border-color: #986820;
+      background: #171107;
+      box-shadow: 0 0 20px rgba(245, 158, 11, .12);
+    }
+
+    .cache.invalid {
+      opacity: .45;
+      filter: saturate(.65);
+    }
+
+    .cache.receive {
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, .55), 0 0 26px rgba(52, 211, 153, .16);
+    }
+
+    .cache-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 9px;
+      color: #cbd5e1;
+      font: 800 .75rem ui-monospace, monospace;
+    }
+
+    .state {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: .66rem;
+      font-weight: 900;
+    }
+
+    .state.mod {
+      background: #3a280d;
+      border: 1px solid #80591f;
+      color: #ffd77f;
+    }
+
+    .state.inv {
+      background: #321719;
+      border: 1px solid #6f2a2e;
+      color: #f59a9e;
+    }
+
+    .vars {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .var {
+      padding: 13px 7px;
+      border-radius: 9px;
+      border: 1px solid #303f54;
+      text-align: center;
+      font: 900 .92rem ui-monospace, monospace;
+      position: relative;
+      color: #dce5f2;
+    }
+
+    .var.a {
+      background: #16273a;
+      border-color: #355c85;
+      color: #a8d2ff;
+    }
+
+    .var.b {
+      background: #321f2d;
+      border-color: #734461;
+      color: #ffc0df;
+    }
+
+    .var.hot {
+      animation: varHot .85s ease;
+    }
+
+    .var.wait {
+      animation: varWait .8s ease;
+    }
+
+    .middle {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .middle-label {
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-weight: 900;
+      color: #738198;
+    }
+
+    .shared-line {
+      width: 100%;
+      background: #15100a;
+      border: 1px solid #78571e;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 16px 44px rgba(0, 0, 0, .30);
+      transition: .2s;
+    }
+
+    .shared-line.flash {
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, .68), 0 0 40px rgba(245, 158, 11, .20);
+    }
+
+    .shared-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font: 900 .78rem ui-monospace, monospace;
+      color: #f7d58f;
+    }
+
+    .shared-values {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+
+    .sv {
+      padding: 14px 7px;
+      border-radius: 10px;
+      text-align: center;
+      font: 900 .92rem ui-monospace, monospace;
+      border: 1px solid #37465c;
+      background: #17202c;
+    }
+
+    .sv.a {
+      background: #182a3e;
+      border-color: #39638f;
+      color: #acd5ff;
+    }
+
+    .sv.b {
+      background: #352131;
+      border-color: #7a4868;
+      color: #ffc3e1;
+    }
+
+    .sv.updated {
+      box-shadow: 0 0 22px rgba(245, 158, 11, .25);
+      transform: scale(1.05);
+    }
+
+    .line-strip {
+      height: 28px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 3px;
+    }
+
+    .cell {
+      border-radius: 4px;
+      background: #222b37;
+      border: 1px solid #313c4c;
+      color: #718096;
+      display: grid;
+      place-items: center;
+      font: 800 .56rem ui-monospace, monospace;
+    }
+
+    .cell.a {
+      background: #253a52;
+      border-color: #3d6288;
+      color: #9cc9fa;
+    }
+
+    .cell.b {
+      background: #472c40;
+      border-color: #70445f;
+      color: #fbb8d8;
+    }
+
+    .owner-pill {
+      margin-top: 10px;
+      text-align: center;
+      font: 900 .72rem ui-monospace, monospace;
+      color: #a1acbd;
+    }
+
+    .owner-pill span {
+      color: var(--amber);
+    }
+
+    .lane {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 4px;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .arrow-left,
+    .arrow-right {
+      position: absolute;
+      top: 0;
+      height: 4px;
+      background: #3a475d;
+      opacity: .55;
+    }
+
+    .arrow-left {
+      left: 22%;
+      width: 20%;
+    }
+
+    .arrow-right {
+      right: 22%;
+      width: 20%;
+    }
+
+    .arrow-left::after,
+    .arrow-right::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+    }
+
+    .arrow-left::after {
+      right: -1px;
+      border-left: 11px solid #55657d;
+    }
+
+    .arrow-right::after {
+      left: -1px;
+      border-right: 11px solid #55657d;
+    }
+
+    .arrow-active {
+      background: #f59e0b;
+      opacity: 1;
+      box-shadow: 0 0 18px rgba(245, 158, 11, .38);
+    }
+
+    .packet {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 15;
+      width: 142px;
+      height: 70px;
+      border-radius: 12px;
+      border: 2px solid var(--amber);
+      background: #34240d;
+      color: #ffd888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font: 900 .8rem ui-monospace, monospace;
+      box-shadow: 0 0 28px rgba(245, 158, 11, .22);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .packet.show {
+      opacity: 1;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      padding: 13px 14px 15px;
+      border-top: 1px solid var(--border);
+      background: #101722;
+    }
+
+    .legend-item {
+      font-size: .75rem;
+      color: #8795a9;
+      text-align: center;
+      padding: 8px;
+      border-radius: 8px;
+      background: #0d141e;
+      border: 1px solid #202c3d;
+    }
+
+    .legend-item b {
+      display: block;
+      color: #dce6f2;
+      margin-bottom: 2px;
+    }
+
+    @keyframes blockPop {
+      0% {
+        opacity: 0;
+        transform: scale(.75);
+      }
+
+      30%,
+      80% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(.9);
+      }
+    }
+
+    @keyframes varHot {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: none;
+      }
+
+      35% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, .6), 0 0 24px rgba(245, 158, 11, .22);
+      }
+    }
+
+    @keyframes varWait {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20%,
+      60% {
+        transform: translateX(-5px);
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, .5);
+      }
+
+      40%,
+      80% {
+        transform: translateX(5px);
+      }
+    }
+
+    button.mode-toggle {
+      border-color: #3b6d59;
+      background: #163126;
+      color: #a9efd0;
+    }
+
+    button.mode-toggle:hover {
+      background: #1b3d2f;
+    }
+
+    .padded-only {
+      display: none;
+    }
+
+    .stage.padded-mode .false-only {
+      display: none;
+    }
+
+    .stage.padded-mode .padded-only {
+      display: flex;
+    }
+
+    .stage.padded-mode {
+      background: radial-gradient(circle at 50% 45%, rgba(52, 211, 153, .08), transparent 30%), #080c12;
+    }
+
+    .stage.padded-mode .core {
+      border-color: #285947;
+      box-shadow: 0 0 0 1px rgba(52, 211, 153, .18), 0 0 26px rgba(52, 211, 153, .07);
+    }
+
+    .stage.padded-mode .cache {
+      opacity: 1;
+      filter: none;
+      border-color: #2f6a53;
+      background: #0d1b16;
+    }
+
+    .stage.padded-mode #c0b,
+    .stage.padded-mode #c1a {
+      opacity: .34;
+      border-style: dashed;
+      background: #111821;
+      color: #6d7b8d;
+    }
+
+    .padded-middle {
+      width: 100%;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .padded-line {
+      width: 100%;
+      border: 1px solid #2f6a53;
+      background: #0d1b16;
+      border-radius: 14px;
+      padding: 13px;
+      transition: .22s ease;
+    }
+
+    .padded-line.flash-green {
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, .58), 0 0 36px rgba(52, 211, 153, .18);
+      transform: scale(1.025);
+    }
+
+    .padded-line .shared-head {
+      color: #a9efd0;
+      margin-bottom: 8px;
+    }
+
+    .padded-value {
+      border: 1px solid #315e4c;
+      background: #13241d;
+      border-radius: 10px;
+      padding: 14px 8px;
+      text-align: center;
+      font: 900 .94rem ui-monospace, monospace;
+      color: #c9f7df;
+      margin-bottom: 8px;
+    }
+
+    .padding-strip {
+      display: grid;
+      grid-template-columns: 1.3fr repeat(7, 1fr);
+      gap: 3px;
+      height: 28px;
+    }
+
+    .padding-strip .cell.pad {
+      background: #171f29;
+      border-color: #2b3544;
+      color: #536174;
+    }
+
+    .owner-pill.green span {
+      color: var(--green);
+    }
+
+    @media (max-width: 920px) {
+      .stage {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        padding: 76px 18px 24px;
+      }
+
+      .middle {
+        order: 2;
+      }
+
+      .left {
+        order: 1;
+      }
+
+      .right {
+        order: 3;
+      }
+
+      .lane,
+      .packet {
+        display: none;
+      }
+
+      .legend {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .banner {
+        white-space: normal;
+        text-align: center;
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Cache Line Bouncing</h1>
+    <p class="sub" id="subText"><strong>A</strong> and <strong>B</strong> are different variables, but both live in
+      <strong>Cache Line #42</strong>. So the whole line has to move between cores.
+    </p>
+
+    <div class="card">
+      <div class="controls">
+        <button class="primary" id="playBtn">▶ Play</button>
+        <button id="stepBtn">Step</button>
+        <button id="resetBtn">Reset</button>
+        <button class="mode-toggle" id="modeBtn">Switch to Padded</button>
+        <div class="spacer"></div>
+        <div class="readout">Loop: <b id="loopNo">1</b> · Step: <b id="stepNo">0</b>/<b id="stepTotal">4</b></div>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="banner" id="banner">Press Play</div>
+
+        <div class="lane false-only">
+          <div class="arrow-left" id="arrowLeft"></div>
+          <div class="arrow-right" id="arrowRight"></div>
+        </div>
+        <div class="packet false-only" id="packet">64B CACHE LINE<br>#42</div>
+
+        <div class="core left" id="core0">
+          <div class="core-head">
+            <span class="core-title">Core 0</span>
+            <span class="thread">A thread</span>
+          </div>
+          <div class="op-box" id="op0">
+            <span class="op-code">A++</span>
+            <span class="blocked-label">BLOCKED</span>
+          </div>
+          <div class="cache-label">Local cache</div>
+          <div class="cache invalid" id="cache0">
+            <div class="cache-title">
+              <span id="lineTitle0">Cache Line #42</span>
+              <span class="state inv" id="state0">Invalid</span>
+            </div>
+            <div class="vars">
+              <div class="var a" id="c0a">A = 10</div>
+              <div class="var b" id="c0b">B = 20</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="middle false-only" id="middleFalse">
+          <div class="middle-label">shared cache line</div>
+          <div class="shared-line" id="sharedLine">
+            <div class="shared-head">
+              <span>CACHE LINE #42</span>
+              <span>64B</span>
+            </div>
+            <div class="shared-values">
+              <div class="sv a" id="midA">A = 10</div>
+              <div class="sv b" id="midB">B = 20</div>
+            </div>
+            <div class="line-strip">
+              <div class="cell a">A</div>
+              <div class="cell a">A</div>
+              <div class="cell">…</div>
+              <div class="cell">…</div>
+              <div class="cell b">B</div>
+              <div class="cell b">B</div>
+              <div class="cell">…</div>
+              <div class="cell">…</div>
+            </div>
+            <div class="owner-pill">Current owner: <span id="ownerText">Core 0</span></div>
+          </div>
+        </div>
+
+        <div class="middle padded-only padded-middle" id="middlePadded">
+          <div class="middle-label">separate padded cache lines</div>
+
+          <div class="padded-line" id="paddedLineA">
+            <div class="shared-head">
+              <span>CACHE LINE #42</span>
+              <span>64B · Core 0</span>
+            </div>
+            <div class="padded-value" id="padMidA">A = 10</div>
+            <div class="padding-strip">
+              <div class="cell a">A</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+            </div>
+            <div class="owner-pill green">Owner: <span>Core 0</span></div>
+          </div>
+
+          <div class="padded-line" id="paddedLineB">
+            <div class="shared-head">
+              <span>CACHE LINE #43</span>
+              <span>64B · Core 1</span>
+            </div>
+            <div class="padded-value" id="padMidB">B = 20</div>
+            <div class="padding-strip">
+              <div class="cell b">B</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+              <div class="cell pad">pad</div>
+            </div>
+            <div class="owner-pill green">Owner: <span>Core 1</span></div>
+          </div>
+        </div>
+
+        <div class="core right" id="core1">
+          <div class="core-head">
+            <span class="core-title">Core 1</span>
+            <span class="thread">B thread</span>
+          </div>
+          <div class="op-box" id="op1">
+            <span class="op-code">B++</span>
+            <span class="blocked-label">BLOCKED</span>
+          </div>
+          <div class="cache-label">Local cache</div>
+          <div class="cache invalid" id="cache1">
+            <div class="cache-title">
+              <span id="lineTitle1">Cache Line #42</span>
+              <span class="state inv" id="state1">Invalid</span>
+            </div>
+            <div class="vars">
+              <div class="var a" id="c1a">A = 10</div>
+              <div class="var b" id="c1b">B = 20</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend" id="legend">
+        <div class="legend-item"><b>1 · Modify</b>Current owner changes its variable</div>
+        <div class="legend-item"><b>2 · Blocked</b>Other core cannot write yet</div>
+        <div class="legend-item"><b>3 · Move line</b>The whole 64B line travels</div>
+        <div class="legend-item"><b>4 · Modify</b>New owner writes its variable</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const playBtn = $('playBtn');
+    const stepBtn = $('stepBtn');
+    const resetBtn = $('resetBtn');
+    const modeBtn = $('modeBtn');
+    const stage = $('stage');
+    const subText = $('subText');
+    const legend = $('legend');
+    const stepTotal = $('stepTotal');
+
+    const core0 = $('core0');
+    const core1 = $('core1');
+    const op0 = $('op0');
+    const op1 = $('op1');
+    const cache0 = $('cache0');
+    const cache1 = $('cache1');
+    const state0 = $('state0');
+    const state1 = $('state1');
+    const c0a = $('c0a');
+    const c0b = $('c0b');
+    const c1a = $('c1a');
+    const c1b = $('c1b');
+    const midA = $('midA');
+    const midB = $('midB');
+    const sharedLine = $('sharedLine');
+    const ownerText = $('ownerText');
+    const packet = $('packet');
+    const banner = $('banner');
+    const arrowLeft = $('arrowLeft');
+    const arrowRight = $('arrowRight');
+    const loopNo = $('loopNo');
+    const stepNo = $('stepNo');
+    const lineTitle0 = $('lineTitle0');
+    const lineTitle1 = $('lineTitle1');
+    const paddedLineA = $('paddedLineA');
+    const paddedLineB = $('paddedLineB');
+    const padMidA = $('padMidA');
+    const padMidB = $('padMidB');
+
+    let a = 10;
+    let b = 20;
+    let owner = 0;        // 0 = Core 0, 1 = Core 1
+    let step = 0;
+    let loop = 1;
+    let playing = false;
+    let timer = null;
+    let mode = 'false-sharing';
+
+    function setState(el, text, cls) {
+      el.textContent = text;
+      el.className = 'state ' + cls;
+    }
+
+    function syncValues() {
+      c0a.textContent = `A = ${a}`;
+      c1b.textContent = `B = ${b}`;
+
+      if (mode === 'padded') {
+        c0b.textContent = 'padding';
+        c1a.textContent = 'padding';
+      } else {
+        c0b.textContent = `B = ${b}`;
+        c1a.textContent = `A = ${a}`;
+      }
+
+      midA.textContent = `A = ${a}`;
+      midB.textContent = `B = ${b}`;
+      padMidA.textContent = `A = ${a}`;
+      padMidB.textContent = `B = ${b}`;
+    }
+
+    function setOwner(newOwner) {
+      owner = newOwner;
+      ownerText.textContent = owner === 0 ? 'Core 0' : 'Core 1';
+
+      core0.classList.toggle('owner', owner === 0);
+      core1.classList.toggle('owner', owner === 1);
+
+      cache0.classList.toggle('mod', owner === 0);
+      cache0.classList.toggle('invalid', owner !== 0);
+      cache1.classList.toggle('mod', owner === 1);
+      cache1.classList.toggle('invalid', owner !== 1);
+
+      setState(state0, owner === 0 ? 'Modified' : 'Invalid', owner === 0 ? 'mod' : 'inv');
+      setState(state1, owner === 1 ? 'Modified' : 'Invalid', owner === 1 ? 'mod' : 'inv');
+    }
+
+    function clearFx() {
+      [core0, core1].forEach(el => el.classList.remove('blocked', 'receive'));
+      [op0, op1].forEach(el => el.classList.remove('active', 'trying'));
+      [cache0, cache1].forEach(el => el.classList.remove('receive'));
+      [c0a, c0b, c1a, c1b].forEach(el => el.classList.remove('hot', 'wait'));
+      [midA, midB].forEach(el => el.classList.remove('updated'));
+      sharedLine.classList.remove('flash');
+      arrowLeft.classList.remove('arrow-active');
+      arrowRight.classList.remove('arrow-active');
+      packet.classList.remove('show');
+      packet.style.left = '50%';
+      paddedLineA.classList.remove('flash-green');
+      paddedLineB.classList.remove('flash-green');
+    }
+
+
+    function setBanner(text, kind = '') {
+      banner.textContent = text;
+      banner.className = 'banner' + (kind ? ' ' + kind : '');
+    }
+
+    function animatePacket(fromPct, toPct, duration = 700, done) {
+      packet.classList.add('show');
+      const start = performance.now();
+
+      function frame(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const x = fromPct + (toPct - fromPct) * eased;
+        packet.style.left = x + '%';
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          if (done) done();
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function phase1() {
+      clearFx();
+      stepNo.textContent = '1';
+
+      if (owner === 0) {
+        op0.classList.add('active');
+        a += 1;
+        syncValues();
+        c0a.classList.add('hot');
+        midA.classList.add('updated');
+        setBanner('Core 0 modifies A', '');
+      } else {
+        op1.classList.add('active');
+        b += 1;
+        syncValues();
+        c1b.classList.add('hot');
+        midB.classList.add('updated');
+        setBanner('Core 1 modifies B', '');
+      }
+    }
+
+    function phase2() {
+      clearFx();
+      stepNo.textContent = '2';
+
+      if (owner === 0) {
+        op1.classList.add('trying');
+        core1.classList.add('blocked');
+        c1b.classList.add('wait');
+        setBanner('Core 1 tries B++  →  BLOCKED', 'warn');
+      } else {
+        op0.classList.add('trying');
+        core0.classList.add('blocked');
+        c0a.classList.add('wait');
+        setBanner('Core 0 tries A++  →  BLOCKED', 'warn');
+      }
+    }
+
+    function phase3() {
+      clearFx();
+      stepNo.textContent = '3';
+      sharedLine.classList.add('flash');
+      midA.classList.add('updated');
+      midB.classList.add('updated');
+
+      if (owner === 0) {
+        arrowLeft.classList.add('arrow-active');
+        setBanner('Whole Cache Line #42 moves to Core 1', 'move');
+        animatePacket(24, 50);
+      } else {
+        arrowRight.classList.add('arrow-active');
+        setBanner('Whole Cache Line #42 moves to Core 0', 'move');
+        animatePacket(76, 50);
+      }
+    }
+
+    function phase4() {
+      clearFx();
+      stepNo.textContent = '4';
+
+      const newOwner = owner === 0 ? 1 : 0;
+
+      if (newOwner === 1) {
+        arrowRight.classList.add('arrow-active');
+        setBanner('Core 1 receives line and modifies B', 'ok');
+        animatePacket(50, 76, 650, () => packet.classList.remove('show'));
+        setOwner(1);
+        core1.classList.add('receive');
+        cache1.classList.add('receive');
+        op1.classList.add('active');
+        b += 1;
+        syncValues();
+        c1b.classList.add('hot');
+        midB.classList.add('updated');
+      } else {
+        arrowLeft.classList.add('arrow-active');
+        setBanner('Core 0 receives line and modifies A', 'ok');
+        animatePacket(50, 24, 650, () => packet.classList.remove('show'));
+        setOwner(0);
+        core0.classList.add('receive');
+        cache0.classList.add('receive');
+        op0.classList.add('active');
+        a += 1;
+        syncValues();
+        c0a.classList.add('hot');
+        midA.classList.add('updated');
+      }
+
+      loop += 1;
+      setTimeout(() => {
+        loopNo.textContent = loop;
+      }, 420);
+    }
+
+    function paddedPhase1() {
+      clearFx();
+      stepNo.textContent = '1';
+      op0.classList.add('active');
+      core0.classList.add('receive');
+      cache0.classList.add('receive');
+      paddedLineA.classList.add('flash-green');
+      a += 1;
+      syncValues();
+      c0a.classList.add('hot');
+      setBanner('Core 0 modifies A — no other core is affected', 'ok');
+    }
+
+    function paddedPhase2() {
+      clearFx();
+      stepNo.textContent = '2';
+      op1.classList.add('active');
+      core1.classList.add('receive');
+      cache1.classList.add('receive');
+      paddedLineB.classList.add('flash-green');
+      b += 1;
+      syncValues();
+      c1b.classList.add('hot');
+      setBanner('Core 1 modifies B — no cache line transfer', 'ok');
+      loop += 1;
+      setTimeout(() => { loopNo.textContent = loop; }, 420);
+    }
+
+    function nextStep() {
+      if (mode === 'padded') {
+        step = (step % 2) + 1;
+        if (step === 1) paddedPhase1();
+        else paddedPhase2();
+        return;
+      }
+
+      step = (step % 4) + 1;
+      if (step === 1) phase1();
+      else if (step === 2) phase2();
+      else if (step === 3) phase3();
+      else phase4();
+    }
+
+    function start() {
+      playing = true;
+      playBtn.textContent = '❚❚ Pause';
+      nextStep();
+      timer = setInterval(nextStep, 1700);
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = '▶ Play';
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    function applyMode() {
+      const padded = mode === 'padded';
+      stage.classList.toggle('padded-mode', padded);
+      modeBtn.textContent = padded ? 'Switch to False Sharing' : 'Switch to Padded';
+      stepTotal.textContent = padded ? '2' : '4';
+
+      if (padded) {
+        subText.innerHTML = '<strong>A</strong> and <strong>B</strong> are separated by padding, so they live in <strong>different cache lines</strong>. Each core keeps ownership of its own line.';
+        lineTitle0.textContent = 'Cache Line #42';
+        lineTitle1.textContent = 'Cache Line #43';
+        legend.innerHTML = `
+      <div class="legend-item"><b>1 · Core 0 writes</b>A changes in Cache Line #42</div>
+      <div class="legend-item"><b>2 · Core 1 writes</b>B changes in Cache Line #43</div>
+      <div class="legend-item"><b>No blocking</b>Neither core waits for ownership</div>
+      <div class="legend-item"><b>No bouncing</b>No 64B cache line moves between cores</div>`;
+      } else {
+        subText.innerHTML = '<strong>A</strong> and <strong>B</strong> are different variables, but both live in <strong>Cache Line #42</strong>. So the whole line has to move between cores.';
+        lineTitle0.textContent = 'Cache Line #42';
+        lineTitle1.textContent = 'Cache Line #42';
+        legend.innerHTML = `
+      <div class="legend-item"><b>1 · Modify</b>Current owner changes its variable</div>
+      <div class="legend-item"><b>2 · Blocked</b>Other core cannot write yet</div>
+      <div class="legend-item"><b>3 · Move line</b>The whole 64B line travels</div>
+      <div class="legend-item"><b>4 · Modify</b>New owner writes its variable</div>`;
+      }
+    }
+
+    function setPaddedOwnership() {
+      core0.classList.remove('owner', 'blocked');
+      core1.classList.remove('owner', 'blocked');
+      cache0.classList.remove('invalid', 'mod');
+      cache1.classList.remove('invalid', 'mod');
+      setState(state0, 'Modified', 'mod');
+      setState(state1, 'Modified', 'mod');
+    }
+
+    function reset() {
+      stop();
+      a = 10;
+      b = 20;
+      owner = 0;
+      step = 0;
+      loop = 1;
+      loopNo.textContent = '1';
+      stepNo.textContent = '0';
+      clearFx();
+      applyMode();
+      syncValues();
+      if (mode === 'padded') setPaddedOwnership();
+      else setOwner(0);
+      setBanner(mode === 'padded' ? 'Press Play — padded layout' : 'Press Play');
+    }
+
+    playBtn.addEventListener('click', () => playing ? stop() : start());
+    stepBtn.addEventListener('click', () => {
+      stop();
+      nextStep();
+    });
+    resetBtn.addEventListener('click', reset);
+    modeBtn.addEventListener('click', () => {
+      mode = mode === 'padded' ? 'false-sharing' : 'padded';
+      reset();
+    });
+
+    reset();
+  </script>
+</body>
+
+</html>

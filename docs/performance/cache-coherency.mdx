@@ -1,0 +1,46 @@
+---
+title: Cache Coherency
+atlas_id: cachecoherency
+description: How multiple CPU caches maintain a consistent view of shared memory.
+---
+
+# Cache Coherency
+Modern CPUs have multiple cores, and each core may have its own private caches.
+
+This means that the same memory location can exist in multiple caches at the same time.
+
+For example:
+
+Memory: X = 10
+
+Core 0 Cache → X = 10
+Core 1 Cache → X = 10
+
+Now if Core 0 changes X to 20, Core 1 must not continue using its old cached value of 10.
+
+This is where cache coherency comes in.
+
+Cache coherency ensures that all CPU cores maintain a consistent view of shared memory.
+---
+Processors use coherency protocols such as MESI or MOESI to track the state of cache lines and coordinate reads and writes between cores.
+
+When a core wants to modify a cache line, it generally needs to obtain exclusive ownership of that line. Copies held by other cores may then be invalidated.
+
+This happens automatically in hardware, so applications normally do not have to manage cache coherency directly.
+
+However, coherency is not free. Frequent writes to shared cache lines can generate invalidations, ownership transfers, and inter-core communication.
+
+Heavy sharing between cores can increase coherency traffic and hurt scalability, especially in highly parallel programs.
+
+This is also why problems such as cache-line bouncing and false sharing can significantly affect multithreaded performance.
+
+This *[article](https://redis.io/glossary/cache-coherence/)* from Redis explains in detail
+
+<div className="embedded-visualizer embedded-visualizer--compact">
+  <iframe
+    src="/visualizers/coherence-visualizer.html"
+    title="Interactive Coherency visualizer"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>

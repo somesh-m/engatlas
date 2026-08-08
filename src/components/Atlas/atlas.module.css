@@ -1,0 +1,308 @@
+.shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.toolbar {
+  position: absolute;
+  z-index: 10;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: min(430px, calc(100% - 2rem));
+  padding: 0.85rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ifm-background-surface-color) 92%, transparent);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 10%);
+  backdrop-filter: blur(10px);
+}
+
+.searchLabel {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.searchLabel input {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  font-weight: 400;
+}
+
+.legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend i[data-status='covered'] { background: #2e8555; }
+.legend i[data-status='partial'] { background: #d08b00; }
+.legend i[data-status='planned'] { background: #7b8491; }
+
+.workspace {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ifm-background-surface-color);
+}
+
+.miniMap {
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 30%);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+}
+
+.details {
+  position: absolute;
+  z-index: 10;
+  right: 1rem;
+  bottom: 1rem;
+  width: min(280px, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 14px;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--ifm-background-surface-color) 92%, transparent);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 10%);
+  backdrop-filter: blur(10px);
+}
+
+.details h2 {
+  margin-top: 0.5rem;
+}
+
+.detailsMeta {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.notReady {
+  border: 1px dashed var(--ifm-color-emphasis-300);
+  border-radius: 10px;
+  padding: 0.75rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+.node {
+  width: 190px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 6%);
+}
+
+.node[data-status='covered'] { border-left-color: #2e8555; }
+.node[data-status='partial'] { border-left-color: #d08b00; }
+.node[data-status='planned'] { border-left-color: #7b8491; }
+.node[data-kind='root'] { border-width: 2px; }
+
+.nodeSelected {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.nodeTopLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.nodeActions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.foldButton {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  color: #fff;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 18%);
+}
+
+.foldButton:hover {
+  filter: brightness(1.12);
+}
+
+.foldButtonExpand {
+  background: #2e8555;
+}
+
+.foldButtonCollapse {
+  background: #c2413b;
+}
+
+.visualizerButton {
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--ifm-color-primary);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--ifm-color-primary) 14%, transparent);
+  color: var(--ifm-color-primary);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.visualizerButton:hover {
+  background: var(--ifm-color-primary);
+  color: #fff;
+}
+
+.kind,
+.status {
+  font-size: 0.65rem;
+  color: var(--ifm-color-emphasis-600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dimmed {
+  opacity: 0.16;
+}
+
+@media (max-width: 900px) {
+  .toolbar {
+    top: 0.75rem;
+    left: 0.75rem;
+    width: calc(100% - 1.5rem);
+  }
+
+  .details {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+}
+
+.emptyState {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border: 1px dashed var(--ifm-color-emphasis-300);
+  border-radius: 16px;
+  padding: 1.5rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.muted {
+  color: var(--ifm-color-emphasis-600);
+}
+
+.visualizerOverlay {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: rgb(7 10 16 / 44%);
+  backdrop-filter: blur(5px);
+}
+
+.visualizerPanel {
+  position: relative;
+  width: min(1240px, 96vw);
+  height: min(760px, 84vh);
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ifm-background-color) 86%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 55%);
+}
+
+.visualizerFrame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.visualizerClose {
+  position: absolute;
+  z-index: 1;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 9px;
+  background: rgb(15 18 26 / 88%);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 35%);
+}
+
+.visualizerClose:hover {
+  background: #c2413b;
+  border-color: #c2413b;
+}
+
+@media (max-width: 700px) {
+  .visualizerOverlay {
+    padding: 0.75rem;
+  }
+
+  .visualizerPanel {
+    width: 100%;
+    height: 88vh;
+    border-radius: 14px;
+  }
+}

@@ -1,0 +1,246 @@
+id: algorithms
+name: Algorithms
+type: category
+children:
+  - id: fundamentals
+    name: Fundamental Algorithms
+    type: category
+    children:
+      - id: searching
+        name: Searching
+        type: category
+      - id: sorting
+        name: Sorting
+        type: category
+      - id: selection
+        name: Selection
+        type: category
+
+  - id: paradigms
+    name: Algorithmic Paradigms
+    type: category
+    children:
+      - id: brute-force
+        name: Brute Force
+        type: category
+      - id: divide-and-conquer
+        name: Divide and Conquer
+        type: category
+      - id: greedy
+        name: Greedy
+        type: category
+      - id: dynamic-programming
+        name: Dynamic Programming
+        type: category
+      - id: backtracking
+        name: Backtracking
+        type: category
+      - id: branch-and-bound
+        name: Branch and Bound
+        type: category
+      - id: randomized
+        name: Randomized Algorithms
+        type: category
+
+  - id: techniques
+    name: Techniques & Patterns
+    type: category
+    children:
+      - id: twopointers
+        name: Two Pointers
+        type: category
+      - id: sliding-window
+        name: Sliding Window
+        type: category
+      - id: prefix-sum
+        name: Prefix Sum
+        type: category
+      - id: difference-array
+        name: Difference Array
+        type: category
+      - id: binary-search-on-answer
+        name: Binary Search on Answer
+        type: category
+      - id: monotonic-stack
+        name: Monotonic Stack
+        type: category
+      - id: monotonic-queue
+        name: Monotonic Queue
+        type: category
+      - id: sweep-line
+        name: Sweep Line
+        type: category
+      - id: meet-in-the-middle
+        name: Meet in the Middle
+        type: category
+      - id: memoization
+        name: Memoization
+        type: category
+      - id: recursion
+        name: Recursion
+        type: category
+
+  - id: graph-algorithms
+    name: Graph Algorithms
+    type: category
+    children:
+      - id: graph-traversal
+        name: Graph Traversal
+        type: category
+      - id: shortest-path
+        name: Shortest Path
+        type: category
+      - id: minimum-spanning-tree
+        name: Minimum Spanning Tree
+        type: category
+      - id: topological-sort
+        name: Topological Sorting
+        type: category
+      - id: strongly-connected-components
+        name: Strongly Connected Components
+        type: category
+      - id: connectivity
+        name: Connectivity
+        type: category
+      - id: network-flow
+        name: Network Flow
+        type: category
+      - id: bipartite-matching
+        name: Bipartite Matching
+        type: category
+
+  - id: tree-algorithms
+    name: Tree Algorithms
+    type: category
+    children:
+      - id: tree-traversal
+        name: Tree Traversal
+        type: category
+      - id: lowest-common-ancestor
+        name: Lowest Common Ancestor
+        type: category
+      - id: binary-lifting
+        name: Binary Lifting
+        type: category
+      - id: tree-dp
+        name: Tree Dynamic Programming
+        type: category
+
+  - id: string-algorithms
+    name: String Algorithms
+    type: category
+    children:
+      - id: pattern-matching
+        name: Pattern Matching
+        type: category
+      - id: string-searching
+        name: String Searching
+        type: category
+      - id: rolling-hash
+        name: Rolling Hash
+        type: category
+      - id: tries
+        name: Trie Algorithms
+        type: category
+      - id: suffix-structures
+        name: Suffix Structures
+        type: category
+
+  - id: numerical-algorithms
+    name: Numerical Algorithms
+    type: category
+    children:
+      - id: number-theory
+        name: Number Theory
+        type: category
+      - id: gcd
+        name: GCD Algorithms
+        type: category
+      - id: prime-algorithms
+        name: Prime Algorithms
+        type: category
+      - id: modular-arithmetic
+        name: Modular Arithmetic
+        type: category
+      - id: matrix-algorithms
+        name: Matrix Algorithms
+        type: category
+
+  - id: computational-geometry
+    name: Computational Geometry
+    type: category
+    children:
+      - id: geometric-primitives
+        name: Geometric Primitives
+        type: category
+      - id: convex-hull
+        name: Convex Hull
+        type: category
+      - id: line-intersection
+        name: Line Intersection
+        type: category
+      - id: closest-pair
+        name: Closest Pair
+        type: category
+
+  - id: optimization
+    name: Optimization Algorithms
+    type: category
+    children:
+      - id: linear-programming
+        name: Linear Programming
+        type: category
+      - id: constraint-satisfaction
+        name: Constraint Satisfaction
+        type: category
+      - id: approximation
+        name: Approximation Algorithms
+        type: category
+
+  - id: probabilisticalgo
+    name: Probabilistic Algorithms
+    type: category
+    children:
+      - id: monte-carlo
+        name: Monte Carlo Algorithms
+        type: category
+      - id: las-vegas
+        name: Las Vegas Algorithms
+        type: category
+      - id: sampling
+        name: Sampling Algorithms
+        type: category
+
+  - id: concurrent-algorithms
+    name: Concurrent Algorithms
+    type: category
+    children:
+      - id: lock-free
+        name: Lock-Free Algorithms
+        type: category
+      - id: wait-free
+        name: Wait-Free Algorithms
+        type: category
+      - id: concurrent-data-structures
+        name: Concurrent Data Structure Algorithms
+        type: category
+
+  - id: distributed-algorithms
+    name: Distributed Algorithms
+    type: category
+    children:
+      - id: consensusalgo
+        name: Consensus
+        type: category
+      - id: leader-election
+        name: Leader Election
+        type: category
+      - id: distributed-coordination
+        name: Distributed Coordination
+        type: category
+      - id: logical-clocks
+        name: Logical Clocks
+        type: category
+      - id: gossipalgo
+        name: Gossip Protocols
+        type: category

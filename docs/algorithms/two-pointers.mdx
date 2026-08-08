@@ -1,0 +1,44 @@
+---
+title: Two Pointers
+atlas_id: twopointers
+description: A traversal technique that uses two indices to efficiently process arrays, strings, or linked structures.
+---
+
+# Two Pointers
+The two pointer technique is an efficient programming pattern that uses two index variables to traverse a linear data structure like an array or a string. It often reduces time complexity from O(n^2) down to O(n) by eliminating nested loops.
+
+---
+
+### Common Strategies
+- **Inward Traversal** : One pointer starts at the beginning and the other at the end, moving towards the center.
+- **Unidirectional** : Both the pointers start at the same side and move forward at different speeds or conditions.
+- **Parallel Pointers** : Two separate pointers track two different arrays or string at the same time.
+
+---
+
+### Problem Patterns
+| Problem Type | Approach |
+|---|---|
+| **Pair Sum in Sorted Array** | Place pointers at both ends; move left if the sum is too small and right if it is too large. |
+| **Palindrome / Symmetric Comparison** | Compare elements from both ends and move both pointers inward. |
+| **In-place Compaction / Remove Duplicates** | Use one pointer to scan and another to track where the next valid element should be written. |
+| **Move / Partition Elements** | Use pointers to separate elements based on a condition, such as zero/non-zero or less/greater than a pivot. |
+| **Merge Two Sorted Sequences** | Keep one pointer on each sequence and advance the pointer pointing to the smaller element. |
+| **Intersection / Common Elements** | Compare elements from two sorted sequences and advance the pointer with the smaller value. |
+| **Fast–Slow Linked List Problems** | Move pointers at different speeds to detect cycles, find the middle, or locate a cycle entry. |
+| **Kth Element from the End** | Maintain a fixed gap between two pointers; when the front pointer reaches the end, the rear pointer is at the answer. |
+| **Target Difference / Distance** | Move pointers over sorted data depending on whether the current difference is smaller or larger than the target. |
+| **Closest Pair / Closest Sum** | Start from opposite ends and move the pointer that can bring the current result closer to the target. |
+| **Sliding Window** | Expand the right pointer to grow the window and move the left pointer when the window violates the required constraint. |
+| **Three Sum / K-Sum** | Fix one or more elements, then use two pointers to find the remaining required sum. |
+| **Container / Maximum Area** | Start at both ends and move the pointer corresponding to the limiting value. |
+| **Partitioning / Dutch National Flag** | Maintain moving boundaries that divide the array into regions based on element categories. |
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/two-pointers-approaches.html"
+    title="Interactive two pointers movement patterns"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache Locality Visualizer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0d0f14;
+            color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .visualizer-card {
+            background-color: #0d0f14;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .top-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            background: #181c26;
+            border: 1px solid #282e3d;
+            color: #7c8ba1;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            background: #252b3b;
+            color: #ffffff;
+            border-color: #3b4459;
+        }
+
+        .icon-btn.primary {
+            background: #1e295d;
+            color: #8fa2ff;
+            border-color: #2e3d82;
+        }
+
+        .icon-btn.primary:hover {
+            background: #28377a;
+            color: #ffffff;
+        }
+
+
+
+        /* Locality Description */
+        .locality-description {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .locality-info {
+            background: #111622;
+            border: 1px solid #1f2738;
+            border-radius: 10px;
+            padding: 16px 18px;
+        }
+
+        .locality-info h3 {
+            font-size: 0.95rem;
+            color: #ffffff;
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        .locality-info p {
+            font-size: 0.84rem;
+            line-height: 1.5;
+            color: #9ca3af;
+        }
+
+        .locality-info strong {
+            color: #93c5fd;
+            font-weight: 600;
+        }
+
+        @media (max-width: 700px) {
+            .locality-description {
+                grid-template-columns: 1fr;
+            }
+        }
+
+                /* Interactive Canvas Area */
+        .stage {
+            position: relative;
+            height: 320px;
+            background: #080a0e;
+            border: 1px solid #181d29;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 40px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        #connector-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* CPU Node */
+        .cpu-node {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #1a2342 0%, #0d1224 100%);
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #ffffff;
+            z-index: 2;
+            position: relative;
+        }
+
+        /* DRAM Grid Section */
+        .dram-section {
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dram-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #e5e7eb;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .memory-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .grid-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .line-label {
+            font-size: 0.72rem;
+            color: #6b7280;
+            width: 45px;
+            text-align: right;
+            font-family: monospace;
+        }
+
+        .cells-group {
+            display: flex;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 4px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: border-color 0.3s ease;
+        }
+
+        .cells-group.cached-line {
+            border-color: rgba(59, 130, 246, 0.4);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .cell {
+            width: 42px;
+            height: 36px;
+            background: #111622;
+            border: 1px solid #1f2738;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+
+        .cell.cached {
+            color: #93c5fd;
+            border-color: #2563eb;
+            background: #142242;
+        }
+
+        .cell.active {
+            border-color: #60a5fa;
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(96, 165, 250, 0.8);
+            transform: scale(1.08);
+            font-weight: bold;
+        }
+
+        .cell.miss-flash {
+            border-color: #f87171;
+            background: #991b1b;
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(248, 113, 113, 0.8);
+        }
+
+        .pattern-subtitle {
+            position: absolute;
+            bottom: 12px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #6b7280;
+            font-family: monospace;
+        }
+
+        /* Controls Section */
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-label {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            background: #131722;
+            border: 1px solid #1f2738;
+            border-radius: 8px;
+            overflow: hidden;
+            width: 480px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .mode-btn:hover {
+            color: #ffffff;
+        }
+
+        .mode-display {
+            flex: 1;
+            text-align: center;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #ffffff;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="visualizer-card">
+        <div class="header">
+            <h2 class="title">Cache Locality Visualizer</h2>
+            <div class="top-controls">
+                <button class="icon-btn primary" id="pause-btn" title="Pause / Play">
+                    <svg id="pause-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/>
+                    </svg>
+                </button>
+                <button class="icon-btn" id="reset-btn" title="Reset Simulation">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+
+
+        <div class="locality-description">
+            <div class="locality-info">
+                <h3>Spatial Locality</h3>
+                <p>
+                    When the CPU accesses a memory location, it is likely to access
+                    <strong>nearby memory addresses</strong> soon after. CPUs take advantage of this
+                    by loading a whole cache line instead of only the requested value. Sequential
+                    array access is a common example.
+                </p>
+            </div>
+            <div class="locality-info">
+                <h3>Temporal Locality</h3>
+                <p>
+                    When the CPU accesses a memory location, it is likely to access the
+                    <strong>same location again</strong> in the near future. Keeping recently used data
+                    in cache makes these repeated accesses much faster than fetching it again from
+                    main memory.
+                </p>
+            </div>
+        </div>
+
+                <!-- Stage Canvas & Nodes -->
+        <div class="stage" id="stage">
+            <canvas id="connector-canvas"></canvas>
+
+            <div class="cpu-node" id="cpu-node">CPU</div>
+
+            <div class="dram-section">
+                <div class="dram-title">Main Memory Grid (DRAM)</div>
+                <div class="memory-grid" id="grid-container">
+                    <!-- Grid dynamically generated -->
+                </div>
+            </div>
+
+            <div class="pattern-subtitle" id="subtitle-text">
+                Spatial: Accessing sequential array (0x00, 0x01...)
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-panel">
+            <div class="control-row">
+                <span class="control-label">Locality Mode</span>
+                <div class="mode-toggle">
+                    <button class="mode-btn" id="prev-mode">&lt;</button>
+                    <div class="mode-display" id="mode-text">Spatial</div>
+                    <button class="mode-btn" id="next-mode">&gt;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Variables
+        const modes = ['Spatial', 'Temporal'];
+        let modeIdx = 0; // 0: Spatial, 1: Temporal
+        
+        let isRunning = true;
+        const speed = 50; // Hardcoded access speed
+        
+        let activeLineIndex = -1; // Current line loaded in cache
+        let currentTargetAddress = 0; // 0x00 to 0x0F
+
+        let animationProgress = 0;
+        let isAnimatingPacket = false;
+        let currentTargetCellEl = null;
+        let isHit = false;
+
+        // Elements
+        const gridContainer = document.getElementById('grid-container');
+        const canvas = document.getElementById('connector-canvas');
+        const ctx = canvas.getContext('2d');
+        const cpuNode = document.getElementById('cpu-node');
+        
+        const modeText = document.getElementById('mode-text');
+        const subtitleText = document.getElementById('subtitle-text');
+        
+        const pauseBtn = document.getElementById('pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        const modeDescriptions = {
+            'Spatial': 'Spatial: Accessing sequential array (0x00, 0x01...)',
+            'Temporal': 'Temporal: Accessing same address repeatedly (0x04, 0x04...)'
+        };
+
+        // Setup 4x4 Grid
+        const hexLabels = [
+            ['0x00', '0x01', '0x02', '0x03'],
+            ['0x04', '0x05', '0x06', '0x07'],
+            ['0x08', '0x09', '0x0A', '0x0B'],
+            ['0x0C', '0x0D', '0x0E', '0x0F']
+        ];
+
+        function initGrid() {
+            gridContainer.innerHTML = '';
+            hexLabels.forEach((row, lineIdx) => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'grid-row';
+
+                const labelEl = document.createElement('div');
+                labelEl.className = 'line-label';
+                labelEl.textContent = `Line ${lineIdx}`;
+                rowEl.appendChild(labelEl);
+
+                const groupEl = document.createElement('div');
+                groupEl.className = 'cells-group';
+                groupEl.id = `line-group-${lineIdx}`;
+
+                row.forEach((hex, colIdx) => {
+                    const cellEl = document.createElement('div');
+                    cellEl.className = 'cell';
+                    cellEl.id = `cell-${lineIdx}-${colIdx}`;
+                    cellEl.textContent = hex;
+                    groupEl.appendChild(cellEl);
+                });
+
+                rowEl.appendChild(groupEl);
+                gridContainer.appendChild(rowEl);
+            });
+        }
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // Simulation Step Logic
+        let lastTimestamp = 0;
+        let stepTimer = 0;
+
+        function updateSimulation(dt) {
+            if (!isRunning) return;
+
+            // Interval calculated from hardcoded speed (50)
+            const interval = 1300 - (speed * 11);
+            stepTimer += dt;
+
+            if (stepTimer >= interval && !isAnimatingPacket) {
+                stepTimer = 0;
+                triggerNextAccess();
+            }
+
+            if (isAnimatingPacket) {
+                animationProgress += dt / (interval * 0.7);
+                if (animationProgress >= 1) {
+                    animationProgress = 1;
+                    completeAccess();
+                }
+            }
+
+            drawConnector();
+        }
+
+        function triggerNextAccess() {
+            const currentMode = modes[modeIdx];
+
+            if (currentMode === 'Spatial') {
+                currentTargetAddress = (currentTargetAddress + 1) % 16;
+            } else if (currentMode === 'Temporal') {
+                // Repeatedly access address 0x04
+                currentTargetAddress = 4;
+            }
+
+            const lineIdx = Math.floor(currentTargetAddress / 4);
+            const colIdx = currentTargetAddress % 4;
+            currentTargetCellEl = document.getElementById(`cell-${lineIdx}-${colIdx}`);
+
+            // Check Cache Hit / Miss
+            isHit = (lineIdx === activeLineIndex);
+
+            isAnimatingPacket = true;
+            animationProgress = 0;
+        }
+
+        function completeAccess() {
+            isAnimatingPacket = false;
+            const lineIdx = Math.floor(currentTargetAddress / 4);
+
+            if (isHit) {
+                currentTargetCellEl.classList.add('active');
+                setTimeout(() => currentTargetCellEl.classList.remove('active'), 250);
+            } else {
+                // Load Line into cache
+                activeLineIndex = lineIdx;
+                updateCacheHighlighting();
+
+                currentTargetCellEl.classList.add('miss-flash');
+                setTimeout(() => currentTargetCellEl.classList.remove('miss-flash'), 350);
+            }
+        }
+
+        function updateCacheHighlighting() {
+            document.querySelectorAll('.cells-group').forEach((group, idx) => {
+                if (idx === activeLineIndex) {
+                    group.classList.add('cached-line');
+                } else {
+                    group.classList.remove('cached-line');
+                }
+            });
+
+            document.querySelectorAll('.cell').forEach((cell) => {
+                const cLine = parseInt(cell.id.split('-')[1]);
+                if (cLine === activeLineIndex) {
+                    cell.classList.add('cached');
+                } else {
+                    cell.classList.remove('cached');
+                }
+            });
+        }
+
+        function drawConnector() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!currentTargetCellEl) return;
+
+            const stageRect = document.getElementById('stage').getBoundingClientRect();
+            const cpuRect = cpuNode.getBoundingClientRect();
+            const targetRect = currentTargetCellEl.getBoundingClientRect();
+
+            const startX = cpuRect.right - stageRect.left;
+            const startY = cpuRect.top + cpuRect.height / 2 - stageRect.top;
+
+            const endX = targetRect.left + targetRect.width / 2 - stageRect.left;
+            const endY = targetRect.top + targetRect.height / 2 - stageRect.top;
+
+            // Draw dashed line
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = 'rgba(75, 85, 99, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            // Draw traveling packet
+            if (isAnimatingPacket) {
+                const currentX = startX + (endX - startX) * animationProgress;
+                const currentY = startY + (endY - startY) * animationProgress;
+
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 6, 0, Math.PI * 2);
+                ctx.fillStyle = isHit ? '#34d399' : '#f87171';
+                ctx.shadowColor = isHit ? '#34d399' : '#f87171';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function resetSimulation() {
+            activeLineIndex = -1;
+            currentTargetAddress = -1;
+            isAnimatingPacket = false;
+            animationProgress = 0;
+            currentTargetCellEl = null;
+
+            updateCacheHighlighting();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function gameLoop(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const dt = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+
+            updateSimulation(dt);
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event Listeners
+        pauseBtn.addEventListener('click', () => {
+            isRunning = !isRunning;
+            pauseBtn.innerHTML = isRunning 
+                ? '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z"/></svg>'
+                : '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/></svg>';
+        });
+
+        resetBtn.addEventListener('click', resetSimulation);
+
+        document.getElementById('prev-mode').addEventListener('click', () => changeMode(-1));
+        document.getElementById('next-mode').addEventListener('click', () => changeMode(1));
+
+        function changeMode(dir) {
+            modeIdx = (modeIdx + dir + modes.length) % modes.length;
+            const currentMode = modes[modeIdx];
+            
+            modeText.textContent = currentMode;
+            subtitleText.textContent = modeDescriptions[currentMode];
+            resetSimulation();
+        }
+
+        // Initialization
+        initGrid();
+        resizeCanvas();
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

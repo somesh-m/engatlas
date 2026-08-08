@@ -1,0 +1,23 @@
+---
+sidebar_position: 1
+title: Engineering Atlas
+atlas_id: software-engineering
+description: "The root of the Engineering Atlas and the written-content entry point."
+---
+
+# Engineering Atlas
+
+This is the written-content side of the project.
+
+The **atlas** is the visual taxonomy. The hierarchy itself is authored in `taxonomy/*.yaml`; these MD/MDX files contain the deeper material attached to taxonomy nodes.
+
+## Content model
+
+- **YAML** decides where a node belongs and what kind of thing it is.
+- **MD/MDX frontmatter** connects an article to one or more taxonomy node IDs.
+- **MD/MDX body** contains the explanation, infographic notes, examples, and future deep dives.
+- **React Flow** only renders the generated nodes and edges.
+
+Content status is derived automatically: a node with an attached article is **covered**, a node with covered descendants is **in progress**, and everything else is **planned**.
+
+Open the [interactive atlas](/atlas) to browse visually.

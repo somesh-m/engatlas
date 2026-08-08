@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cache Coherency Visualizer</title>
+<style>
+    :root {
+        color-scheme: dark;
+        --ifm-color-primary: #60a5fa;
+        --ifm-color-emphasis-300: #334155;
+        --ifm-color-emphasis-400: #526176;
+        --surface: #111826;
+        --surface-raised: #172033;
+        --text: #eef4fb;
+        --muted: #a7b4c5;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        min-height: 100%;
+        margin: 0;
+    }
+
+    body {
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        background:
+            radial-gradient(circle at 50% 35%, rgb(59 130 246 / 10%), transparent 42%),
+            #080c13;
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+            "Segoe UI", sans-serif;
+    }
+</style>
+</head>
+<body>
+<div class="coherency-demo">
+    <div class="step-label" id="stepLabel">1. Initial State</div>
+
+    <div class="coherency-row">
+        <div class="core">
+            <div class="core-title">Core 0</div>
+            <div class="cache-line shared" id="core0Line">
+                <div class="value" id="core0Value">X = 10</div>
+                <div class="state" id="core0State">Shared</div>
+            </div>
+        </div>
+
+        <div class="coherency-middle">
+            <div class="arrow" id="protocolArrow">↔</div>
+            <div class="description" id="description">
+                Both cores have the same value
+            </div>
+        </div>
+
+        <div class="core">
+            <div class="core-title">Core 1</div>
+            <div class="cache-line shared" id="core1Line">
+                <div class="value" id="core1Value">X = 10</div>
+                <div class="state" id="core1State">Shared</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="step-dots">
+        <span class="dot active" id="dot0"></span>
+        <span class="dot" id="dot1"></span>
+        <span class="dot" id="dot2"></span>
+    </div>
+</div>
+
+<style>
+    .coherency-demo {
+        width: min(650px, 100%);
+        max-width: 650px;
+        margin: 24px auto;
+        padding: 20px;
+        border: 1px solid var(--ifm-color-emphasis-300);
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgb(23 32 51 / 96%), rgb(13 19 30 / 96%));
+        box-shadow: 0 22px 65px rgb(0 0 0 / 38%);
+    }
+
+    .step-label {
+        text-align: center;
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #f8fbff;
+        letter-spacing: -0.015em;
+    }
+
+    .coherency-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+    }
+
+    .core {
+        text-align: center;
+        min-width: 135px;
+    }
+
+    .core-title {
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #93c5fd;
+    }
+
+    .core:last-child .core-title {
+        color: #c4b5fd;
+    }
+
+    .cache-line {
+        border: 2px solid;
+        border-radius: 10px;
+        padding: 12px 20px;
+        transition:
+            border-color 0.35s ease,
+            background 0.35s ease,
+            opacity 0.35s ease;
+    }
+
+    .value {
+        font-family: monospace;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .state {
+        margin-top: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .shared {
+        border-color: #60a5fa;
+        background: rgb(59 130 246 / 14%);
+        box-shadow: inset 0 0 20px rgb(59 130 246 / 5%);
+    }
+
+    .shared .state {
+        color: #93c5fd;
+    }
+
+    .modified {
+        border-color: #fbbf24;
+        background: rgb(245 158 11 / 14%);
+        box-shadow: inset 0 0 20px rgb(245 158 11 / 5%);
+    }
+
+    .modified .state {
+        color: #fcd34d;
+    }
+
+    .stale {
+        border-color: #94a3b8;
+        background: rgb(148 163 184 / 10%);
+    }
+
+    .stale .state {
+        color: #cbd5e1;
+    }
+
+    .invalid {
+        border-color: #fb7185;
+        background: rgb(244 63 94 / 13%);
+        opacity: 0.78;
+    }
+
+    .invalid .state {
+        color: #fda4af;
+    }
+
+    .coherency-middle {
+        width: 180px;
+        text-align: center;
+    }
+
+    .arrow {
+        font-size: 26px;
+        margin-bottom: 6px;
+        color: #7dd3fc;
+        text-shadow: 0 0 16px rgb(56 189 248 / 38%);
+    }
+
+    .description {
+        font-size: 12px;
+        color: var(--muted);
+        min-height: 36px;
+        line-height: 1.45;
+    }
+
+    .step-dots {
+        margin-top: 18px;
+        text-align: center;
+    }
+
+    .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        margin: 0 4px;
+        border-radius: 50%;
+        background: var(--ifm-color-emphasis-400);
+    }
+
+    .dot.active {
+        background: var(--ifm-color-primary);
+        box-shadow: 0 0 10px rgb(96 165 250 / 70%);
+    }
+
+    @media (max-width: 600px) {
+        .coherency-row {
+            gap: 10px;
+        }
+
+        .core {
+            min-width: 105px;
+        }
+
+        .cache-line {
+            padding: 10px 12px;
+        }
+
+        .coherency-middle {
+            width: 120px;
+        }
+    }
+</style>
+
+<script>
+    (() => {
+        const states = [
+            {
+                label: "1. Initial State",
+                core0Value: "X = 10",
+                core0State: "Shared",
+                core0Class: "shared",
+                core1Value: "X = 10",
+                core1State: "Shared",
+                core1Class: "shared",
+                arrow: "↔",
+                description: "Both cores have the same value"
+            },
+            {
+                label: "2. Core 0 Modifies X",
+                core0Value: "X = 20",
+                core0State: "Modified",
+                core0Class: "modified",
+                core1Value: "X = 10",
+                core1State: "Old Copy",
+                core1Class: "stale",
+                arrow: "→",
+                description: "Core 0 changes its copy"
+            },
+            {
+                label: "3. Coherency Restored",
+                core0Value: "X = 20",
+                core0State: "Modified",
+                core0Class: "modified",
+                core1Value: "X = 10",
+                core1State: "Invalid",
+                core1Class: "invalid",
+                arrow: "────▶",
+                description: "Coherency protocol invalidates Core 1's old copy"
+            }
+        ];
+
+        let currentStep = 0;
+
+        const core0Line = document.getElementById("core0Line");
+        const core1Line = document.getElementById("core1Line");
+
+        function showStep(index) {
+            const state = states[index];
+
+            document.getElementById("stepLabel").textContent = state.label;
+
+            document.getElementById("core0Value").textContent = state.core0Value;
+            document.getElementById("core0State").textContent = state.core0State;
+
+            document.getElementById("core1Value").textContent = state.core1Value;
+            document.getElementById("core1State").textContent = state.core1State;
+
+            core0Line.className = `cache-line ${state.core0Class}`;
+            core1Line.className = `cache-line ${state.core1Class}`;
+
+            document.getElementById("protocolArrow").textContent = state.arrow;
+            document.getElementById("description").textContent = state.description;
+
+            for (let i = 0; i < states.length; i++) {
+                document
+                    .getElementById(`dot${i}`)
+                    .classList.toggle("active", i === index);
+            }
+        }
+
+        setInterval(() => {
+            currentStep = (currentStep + 1) % states.length;
+            showStep(currentStep);
+        }, 2000);
+    })();
+</script>
+</body>
+</html>

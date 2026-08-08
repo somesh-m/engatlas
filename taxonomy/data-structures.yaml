@@ -1,0 +1,35 @@
+id: data-structures
+name: Data Structures
+type: category
+children:
+  - id: array
+    name: Array
+    type: concept
+  - id: hashtable
+    name: HashTable
+    type: concept
+  - id: tree
+    name: Tree
+    type: concept
+  - id: heap
+    name: Heap
+    type: concept
+  - id: graph
+    name: Graph
+    type: concept
+  - id: probabilistic
+    name: Probabilistic
+    type: category
+    children:
+      - id: bloomfilter
+        name: Bloom Filter
+        type: concept
+      - id: cuckoofilter
+        name: Cuckoo Filter
+        type: concept
+      - id: hll
+        name: HyperLogLog
+        type: concept
+      - id: cmsketch
+        name: Count-Min Sketch
+        type: concept

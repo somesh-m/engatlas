@@ -1,0 +1,36 @@
+---
+title: Cache Line Bouncing
+atlas_id: cacheline
+description: Cache line bouncing happens when different CPU core tries to access variables/memory locations which are held by same cache line. This force the hardware to enforce cache coherency, consuming extra cycles.
+---
+
+# Cache Line Bouncing
+
+Cache line bouncing is a performance bottleneck, particularly in multi core processors where a cache line repeatedly moves back and forth between different CPU caches because multiple cores are trying to write to the same memory address, or separate addresses packed in same cache line.
+
+## The Mechanism
+CPUs access memory in fixed **64-byte chunks** called **cache lines**. Fetching a single memory location loads contiguous memory to fill the entire line. When two cores modify separate variables residing on the **same cache line**:
+
+- **Core 1** modifies `Variable A` => marks the cache line as **Modified** locally and **Invalid** in other cores' caches via coherence protocols (e.g., MESI).
+- **Core 2** attempts to write `Variable B` => detects the line as invalid, forcing a cache line reload/transfer.
+- **Impact:** Continuous invalidation ping-pongs the line between CPU caches—this is **Cache Line Bouncing** caused by **False Sharing**.
+
+> While variables are logically separate, physical co-location forces hardware synchronization. Latencies scale severely on NUMA architectures due to interconnect bottlenecks across sockets.
+
+---
+## Main Causes
+- **False Sharing** : Independent variables which happen to sit on the same cache line.
+- **True Sharing** : Multiple threads actively modify the exact same variable/memory.
+- **Spinlocks & contended Mutexes** : Loop which test and set a lock variable can cause constant invalidations.
+---
+
+*Read in detail at:* [Medium: Multithreaded Performance in Rust](https://medium.com/@somesh557/i-wrote-a-simple-multithreaded-code-in-rust-but-the-performance-didnt-increase-much-with-an-8943648431ff?sharedUserId=somesh557)
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/cache-line-bouncing-visualizer.html"
+    title="Interactive cache line bouncing visualizer"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>

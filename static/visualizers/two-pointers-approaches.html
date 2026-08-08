@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Two Pointers — Three Movement Patterns</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    color-scheme:dark;
+    --bg:#0a0d13;
+    --panel:#111826;
+    --panel2:#0d131d;
+    --border:#334155;
+    --text:#eef3f8;
+    --muted:#9aa9bc;
+    --blue:#60a5fa;
+    --pink:#f472b6;
+    --amber:#f59e0b;
+    --red:#ef4444;
+    --green:#34d399;
+    --violet:#a78bfa;
+  }
+
+  body {
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(96,165,250,.10), transparent 34%),
+      var(--bg);
+    color:var(--text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 40px;
+  }
+
+  .wrap { width:min(1180px, 100%); }
+  h1 {
+    margin:0;
+    font-size:clamp(1.55rem, 3vw, 2.15rem);
+    letter-spacing:-.03em;
+  }
+  .sub {
+    margin:0 0 16px;
+    color:var(--muted);
+    font-size:.96rem;
+  }
+  .sub strong { color:#fff; }
+
+  .card {
+    background:linear-gradient(145deg, rgba(17,24,38,.98), rgba(10,15,24,.98));
+    border:1px solid var(--border);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 28px 80px rgba(0,0,0,.35);
+  }
+
+  .tabs {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    border-bottom:1px solid var(--border);
+    background:#0d141e;
+  }
+  .tab {
+    appearance:none;
+    border:0;
+    border-right:1px solid var(--border);
+    border-radius:0;
+    background:#0d141e;
+    color:#8f9db0;
+    padding:15px 12px 14px;
+    font-weight:900;
+    cursor:pointer;
+    position:relative;
+    transition:.2s ease;
+  }
+  .tab:last-child { border-right:0; }
+  .tab:hover { background:#121b28; color:#cfd8e5; }
+  .tab.active {
+    color:#dfeeff;
+    background:#121c2a;
+  }
+  .tab.active::after {
+    content:"";
+    position:absolute;
+    left:16%; right:16%; bottom:0;
+    height:3px;
+    border-radius:999px 999px 0 0;
+    background:var(--blue);
+    box-shadow:0 0 18px rgba(96,165,250,.35);
+  }
+  .tab-icon { margin-right:7px; color:var(--blue); }
+
+  .controls {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+    background:#111925;
+  }
+
+  button.control {
+    border:1px solid #344158;
+    background:#1a2432;
+    color:#dce5f0;
+    border-radius:9px;
+    padding:8px 13px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  button.control:hover { background:#222f40; }
+  button.control:focus-visible,
+  .tab:focus-visible,
+  .speed-control input:focus-visible {
+    outline:2px solid var(--blue);
+    outline-offset:2px;
+  }
+  button.control.primary {
+    background:#223b72;
+    border-color:#365a9e;
+    color:#c9d8ff;
+  }
+
+  .speed-control {
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:0 4px;
+    color:#95a2b5;
+    font:800 .76rem ui-monospace, monospace;
+  }
+  .speed-control label {
+    color:#cbd5e1;
+    white-space:nowrap;
+  }
+  .speed-control input[type="range"] {
+    width:130px;
+    accent-color:var(--blue);
+    cursor:pointer;
+  }
+
+  * {
+    scrollbar-width:thin;
+    scrollbar-color:#475569 #0b111a;
+  }
+  *::-webkit-scrollbar { width:9px; height:9px; }
+  *::-webkit-scrollbar-track { background:#0b111a; }
+  *::-webkit-scrollbar-thumb {
+    border:2px solid #0b111a;
+    border-radius:999px;
+    background:#475569;
+  }
+  .speed-value {
+    width:38px;
+    color:#fff;
+    text-align:right;
+  }
+
+  .spacer { flex:1; }
+  .readout {
+    font:800 .76rem ui-monospace, monospace;
+    color:#95a2b5;
+  }
+  .readout b { color:#fff; }
+
+  .stage {
+    position:relative;
+    min-height:500px;
+    background:radial-gradient(circle at 50% 44%, rgba(96,165,250,.08), transparent 32%), #080c12;
+    padding:72px 38px 34px;
+    overflow:hidden;
+  }
+
+  .banner {
+    position:absolute;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    padding:10px 18px;
+    border-radius:999px;
+    border:1px solid #33445c;
+    background:#121b27;
+    color:#e4ecf5;
+    font:900 .82rem ui-monospace, monospace;
+    letter-spacing:.02em;
+    white-space:nowrap;
+    box-shadow:0 8px 25px rgba(0,0,0,.24);
+  }
+
+  .explain {
+    width:min(900px, 100%);
+    margin:0 auto 22px;
+    text-align:center;
+  }
+  .explain h2 {
+    margin:0 0 7px;
+    font-size:1.15rem;
+    letter-spacing:-.015em;
+  }
+  .explain p {
+    margin:0;
+    color:#8795a8;
+    font-size:.9rem;
+  }
+
+  .viz {
+    display:none;
+    width:min(960px,100%);
+    margin:0 auto;
+  }
+  .viz.active { display:block; }
+
+  .array-shell {
+    position:relative;
+    width:min(820px, 100%);
+    margin:54px auto 20px;
+    padding:0 4px;
+  }
+  .array {
+    display:grid;
+    grid-template-columns:repeat(var(--count), 1fr);
+    gap:7px;
+  }
+  .cell {
+    min-width:0;
+    height:74px;
+    border-radius:11px;
+    border:1px solid #34445c;
+    background:#111a27;
+    display:grid;
+    place-items:center;
+    font:900 clamp(.88rem,2vw,1.2rem) ui-monospace, monospace;
+    color:#dce6f2;
+    transition:.25s ease;
+    position:relative;
+  }
+  .cell.focus {
+    border-color:#536987;
+    background:#172131;
+  }
+  .cell.left-hot {
+    border-color:#287258;
+    box-shadow:0 0 0 1px rgba(52,211,153,.3), 0 0 22px rgba(52,211,153,.12);
+  }
+  .cell.right-hot {
+    border-color:#3a6fa9;
+    box-shadow:0 0 0 1px rgba(96,165,250,.32), 0 0 22px rgba(96,165,250,.12);
+  }
+  .cell.both-hot {
+    border-color:#7b5caa;
+    box-shadow:0 0 0 1px rgba(167,139,250,.32), 0 0 24px rgba(167,139,250,.12);
+  }
+  .cell.passed { opacity:.42; }
+
+  .pointer-layer {
+    position:absolute;
+    left:4px;
+    right:4px;
+    top:-49px;
+    height:42px;
+    pointer-events:none;
+  }
+  .pointer {
+    position:absolute;
+    transform:translateX(-50%);
+    transition:left .62s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    z-index:10;
+  }
+  .pointer .pill {
+    min-width:34px;
+    height:28px;
+    padding:0 8px;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    font:900 .72rem ui-monospace, monospace;
+    border:1px solid currentColor;
+    background:#0d141e;
+    box-shadow:0 5px 18px rgba(0,0,0,.3);
+  }
+  .pointer .stem {
+    width:2px;
+    height:13px;
+    background:currentColor;
+    position:relative;
+  }
+  .pointer .stem::after {
+    content:"";
+    position:absolute;
+    left:50%; bottom:-1px;
+    transform:translate(-50%, 70%);
+    border-left:5px solid transparent;
+    border-right:5px solid transparent;
+    border-top:7px solid currentColor;
+  }
+  .pointer.green { color:var(--green); }
+  .pointer.blue { color:var(--blue); }
+  .pointer.pink { color:var(--pink); }
+  .pointer.violet { color:var(--violet); }
+
+  .direction-line {
+    height:44px;
+    margin:8px auto 0;
+    width:min(700px,92%);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:18px;
+    color:#66758b;
+    font:800 .72rem ui-monospace, monospace;
+  }
+  .arrow-word { display:flex; align-items:center; gap:8px; }
+  .arrow {
+    width:86px;
+    height:3px;
+    background:#334158;
+    border-radius:99px;
+    position:relative;
+  }
+  .arrow.right::after {
+    content:"";
+    position:absolute; right:-1px; top:50%; transform:translateY(-50%);
+    border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:9px solid #52647d;
+  }
+  .arrow.left::after {
+    content:"";
+    position:absolute; left:-1px; top:50%; transform:translateY(-50%);
+    border-top:6px solid transparent; border-bottom:6px solid transparent; border-right:9px solid #52647d;
+  }
+
+  .two-rows {
+    width:min(820px,100%);
+    margin:42px auto 0;
+    display:grid;
+    gap:32px;
+  }
+  .row-wrap {
+    display:grid;
+    grid-template-columns:48px 1fr;
+    gap:12px;
+    align-items:center;
+  }
+  .row-name {
+    font:900 .8rem ui-monospace, monospace;
+    color:#8fa0b6;
+    text-align:right;
+  }
+  .row-wrap .array-shell { margin:42px 0 0; width:100%; }
+
+  .problem-line {
+    margin-top:9px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:6px 10px;
+    border:1px solid #29384d;
+    border-radius:999px;
+    background:#0d141e;
+    color:#aab6c6;
+    font:800 .72rem ui-monospace, monospace;
+  }
+
+  .comparison-panel {
+    width:min(820px,100%);
+    margin:24px auto 0;
+    padding:14px 16px;
+    border:1px solid #2c3b51;
+    border-radius:12px;
+    background:#0d141e;
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    align-items:center;
+    gap:12px;
+  }
+  .comparison-label {
+    color:#7f8da0;
+    font:900 .68rem ui-monospace, monospace;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .comparison-panel strong {
+    color:#e8eef7;
+    font:900 .88rem ui-monospace, monospace;
+  }
+  .comparison-panel .detail {
+    color:#9aa9bc;
+    font:800 .76rem ui-monospace, monospace;
+    text-align:right;
+  }
+  .comparison-panel.success {
+    border-color:#2e6b53;
+    background:#0f1d18;
+  }
+  .comparison-panel.success strong { color:#9df0ca; }
+  .comparison-panel.warn {
+    border-color:#74541c;
+    background:#1b150b;
+  }
+  .comparison-panel.warn strong { color:#ffd88d; }
+
+  .cell.zero {
+    color:#f59e0b;
+    border-color:#61481d;
+    background:#1b160d;
+  }
+  .cell.max-hot {
+    border-color:#805fae;
+    background:#1c1728;
+    box-shadow:0 0 0 1px rgba(167,139,250,.34), 0 0 24px rgba(167,139,250,.14);
+  }
+  .cell.done {
+    border-color:#2c5f4d;
+    background:#102019;
+    color:#9de5c7;
+  }
+
+  .status-grid {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin:26px auto 0;
+    width:min(900px,100%);
+  }
+  .status-card {
+    min-height:86px;
+    padding:13px;
+    border:1px solid #243147;
+    background:#0d141e;
+    border-radius:12px;
+  }
+  .status-card b {
+    display:block;
+    color:#dfe8f5;
+    font-size:.76rem;
+    margin-bottom:5px;
+  }
+  .status-card span {
+    color:#7f8da0;
+    font-size:.75rem;
+    line-height:1.35;
+  }
+  .status-card.hot {
+    border-color:#3b597c;
+    background:#101a28;
+  }
+
+  .legend {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:9px;
+    padding:13px 14px 15px;
+    border-top:1px solid var(--border);
+    background:#101722;
+  }
+  .legend-item {
+    font-size:.75rem;
+    color:#8795a9;
+    text-align:center;
+    padding:8px;
+    border-radius:8px;
+    background:#0d141e;
+    border:1px solid #202c3d;
+  }
+  .legend-item b {
+    display:block;
+    color:#dce6f2;
+    margin-bottom:2px;
+  }
+
+  .pulse { animation:pulse .75s ease; }
+  @keyframes pulse {
+    0%,100% { transform:scale(1); }
+    40% { transform:scale(1.055); box-shadow:0 0 0 2px rgba(96,165,250,.35), 0 0 28px rgba(96,165,250,.14); }
+  }
+
+  @media (max-width:760px) {
+    .stage { min-height:520px; padding:72px 16px 28px; }
+    .tab { padding:13px 7px; font-size:.76rem; }
+    .tab-icon { display:none; }
+    .cell { height:60px; font-size:.83rem; }
+    .status-grid, .legend { grid-template-columns:1fr; }
+    .comparison-panel { grid-template-columns:1fr; gap:5px; }
+    .comparison-panel .detail { text-align:left; }
+    .row-wrap { grid-template-columns:30px 1fr; gap:7px; }
+    .banner { white-space:normal; text-align:center; width:90%; }
+    .speed-control { width:100%; order:3; }
+    .speed-control input[type="range"] { flex:1; width:auto; }
+  }
+
+  @media (prefers-reduced-motion:reduce) {
+    *, *::before, *::after {
+      scroll-behavior:auto !important;
+      transition-duration:.01ms !important;
+      animation-duration:.01ms !important;
+      animation-iteration-count:1 !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="tabs" role="tablist" aria-label="Two pointer movement patterns">
+      <button class="tab active" data-tab="inward" role="tab" aria-selected="true"><span class="tab-icon">→ ←</span>Inward</button>
+      <button class="tab" data-tab="unidirectional" role="tab" aria-selected="false"><span class="tab-icon">→ →</span>Unidirectional</button>
+      <button class="tab" data-tab="parallel" role="tab" aria-selected="false"><span class="tab-icon">⇉</span>Parallel</button>
+    </div>
+
+    <div class="controls">
+      <button class="control primary" id="playBtn">▶ Play</button>
+      <button class="control" id="stepBtn">Step</button>
+      <button class="control" id="resetBtn">Reset</button>
+      <div class="speed-control">
+        <label for="speedSlider">Speed</label>
+        <input id="speedSlider" type="range" min="0.5" max="3" step="0.25" value="1" aria-label="Animation speed" />
+        <span class="speed-value" id="speedValue">1×</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="readout">Step: <b id="stepNo">0</b>/<b id="stepTotal">4</b></div>
+    </div>
+
+    <div class="stage">
+      <div class="banner" id="banner">Press Play</div>
+
+      <section class="viz active" id="viz-inward">
+        <div class="explain">
+          <h2>Inward — palindrome check</h2>
+          <p>Compare mirrored characters from the two ends. If every pair matches, the string is a palindrome.</p>
+          <div class="problem-line">Problem · Is “RACECAR” a palindrome?</div>
+        </div>
+        <div class="array-shell">
+          <div class="pointer-layer">
+            <div class="pointer green" id="inL"><div class="pill">L</div><div class="stem"></div></div>
+            <div class="pointer blue" id="inR"><div class="pill">R</div><div class="stem"></div></div>
+          </div>
+          <div class="array" id="inArray" style="--count:7"></div>
+        </div>
+        <div class="direction-line">
+          <div class="arrow-word"><div class="arrow right"></div><span>L moves right</span></div>
+          <div class="arrow-word"><span>R moves left</span><div class="arrow left"></div></div>
+        </div>
+        <div class="comparison-panel" id="inComparePanel">
+          <span class="comparison-label">Comparison</span>
+          <strong id="inComparison">Ready</strong>
+          <span class="detail" id="inDetail">Start from both ends</span>
+        </div>
+        <div class="status-grid">
+          <div class="status-card" id="inStatus0"><b>Compare</b><span>Check whether the characters at L and R are equal.</span></div>
+          <div class="status-card" id="inStatus1"><b>Move inward</b><span>When they match, move both pointers toward the center.</span></div>
+          <div class="status-card" id="inStatus2"><b>Result</b><span>If L reaches R without a mismatch, the string is a palindrome.</span></div>
+        </div>
+      </section>
+
+      <section class="viz" id="viz-unidirectional">
+        <div class="explain">
+          <h2>Unidirectional — push zeros to the end</h2>
+          <p>Fast scans the array. Slow marks the next position where a non-zero value should be placed.</p>
+          <div class="problem-line">Problem · Move all 0s to the end, preserving non-zero order</div>
+        </div>
+        <div class="array-shell">
+          <div class="pointer-layer">
+            <div class="pointer green" id="uniS"><div class="pill">slow</div><div class="stem"></div></div>
+            <div class="pointer blue" id="uniF"><div class="pill">fast</div><div class="stem"></div></div>
+          </div>
+          <div class="array" id="uniArray" style="--count:7"></div>
+        </div>
+        <div class="direction-line">
+          <div class="arrow-word"><div class="arrow right"></div><span>slow = next non-zero slot</span></div>
+          <div class="arrow-word"><div class="arrow right"></div><span>fast = scanner</span></div>
+        </div>
+        <div class="comparison-panel" id="uniComparePanel">
+          <span class="comparison-label">Decision</span>
+          <strong id="uniComparison">Ready</strong>
+          <span class="detail" id="uniDetail">Array: [0, 1, 0, 3, 12, 0, 5]</span>
+        </div>
+        <div class="status-grid">
+          <div class="status-card" id="uniStatus0"><b>Zero</b><span>If fast sees 0, only fast moves forward.</span></div>
+          <div class="status-card" id="uniStatus1"><b>Non-zero</b><span>Place the value at slow, then advance slow and fast.</span></div>
+          <div class="status-card" id="uniStatus2"><b>Result</b><span>Non-zero values keep their relative order; zeros collect at the end.</span></div>
+        </div>
+      </section>
+
+      <section class="viz" id="viz-parallel">
+        <div class="explain">
+          <h2>Parallel — highest value across two arrays</h2>
+          <p>Walk both arrays together, compare the current pair, and keep the highest value seen so far.</p>
+          <div class="problem-line">Problem · Find the highest value among both arrays</div>
+        </div>
+        <div class="two-rows">
+          <div class="row-wrap">
+            <div class="row-name">A</div>
+            <div class="array-shell">
+              <div class="pointer-layer">
+                <div class="pointer green" id="parA"><div class="pill">i</div><div class="stem"></div></div>
+              </div>
+              <div class="array" id="parArrayA" style="--count:6"></div>
+            </div>
+          </div>
+          <div class="row-wrap">
+            <div class="row-name">B</div>
+            <div class="array-shell">
+              <div class="pointer-layer">
+                <div class="pointer pink" id="parB"><div class="pill">j</div><div class="stem"></div></div>
+              </div>
+              <div class="array" id="parArrayB" style="--count:6"></div>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-panel" id="parComparePanel">
+          <span class="comparison-label">Comparison</span>
+          <strong id="parComparison">Ready</strong>
+          <span class="detail" id="parDetail">Highest so far: —</span>
+        </div>
+        <div class="status-grid">
+          <div class="status-card" id="parStatus0"><b>Compare pair</b><span>Compare A[i] with B[j].</span></div>
+          <div class="status-card" id="parStatus1"><b>Track maximum</b><span>Update the highest value if the current pair contains something larger.</span></div>
+          <div class="status-card" id="parStatus2"><b>Result</b><span>After both pointers finish, the tracked value is the maximum across both arrays.</span></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="legend" id="legend">
+      <div class="legend-item"><b>Inward</b>Palindrome · compare mirrored characters</div>
+      <div class="legend-item"><b>Unidirectional</b>Move zeros · scan + write boundary</div>
+      <div class="legend-item"><b>Parallel</b>Two arrays · compare in parallel</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const tabs = [...document.querySelectorAll('.tab')];
+const playBtn = $('playBtn');
+const stepBtn = $('stepBtn');
+const resetBtn = $('resetBtn');
+const speedSlider = $('speedSlider');
+const speedValue = $('speedValue');
+const banner = $('banner');
+const stepNo = $('stepNo');
+const stepTotal = $('stepTotal');
+
+const data = {
+  inward: [...'RACECAR'],
+  unidirectional: [0,1,0,3,12,0,5],
+  parallelA: [3,14,7,20,5,11],
+  parallelB: [9,2,18,6,22,4]
+};
+
+let active = 'inward';
+let step = 0;
+let playing = false;
+let timer = null;
+
+const totals = { inward:5, unidirectional:9, parallel:8 };
+
+function renderArray(id, values) {
+  const el = $(id);
+  el.innerHTML = values.map((v,i) => `<div class="cell${v === 0 ? ' zero' : ''}" data-index="${i}">${v}</div>`).join('');
+}
+
+renderArray('inArray', data.inward);
+renderArray('uniArray', data.unidirectional);
+renderArray('parArrayA', data.parallelA);
+renderArray('parArrayB', data.parallelB);
+
+function pct(index, count) {
+  return ((index + .5) / count) * 100;
+}
+
+function setPointer(id, index, count) {
+  $(id).style.left = pct(index, count) + '%';
+}
+
+function cells(id) { return [...$(id).children]; }
+function clearCells(id) {
+  cells(id).forEach(c => {
+    const isZero = c.textContent === '0';
+    c.className = 'cell' + (isZero ? ' zero' : '');
+  });
+}
+function mark(id, index, cls) {
+  const c = cells(id)[index];
+  if (c) c.classList.add(cls);
+}
+function pulse(id) {
+  const el = $(id);
+  el.classList.remove('pulse');
+  void el.offsetWidth;
+  el.classList.add('pulse');
+}
+function setBanner(text) { banner.textContent = text; }
+function clearStatus(prefix) {
+  for (let i=0;i<3;i++) $(prefix+'Status'+i).classList.remove('hot');
+}
+function hotStatus(prefix,index) {
+  clearStatus(prefix);
+  $(prefix+'Status'+index).classList.add('hot');
+}
+function setCompare(prefix, main, detail, kind='') {
+  $(prefix+'Comparison').textContent = main;
+  $(prefix+'Detail').textContent = detail;
+  $(prefix+'ComparePanel').className = 'comparison-panel' + (kind ? ' ' + kind : '');
+}
+
+function renderInward(s) {
+  renderArray('inArray', data.inward);
+  const states = [
+    {l:0,r:6,msg:'Start at both ends',cmp:'Ready to compare',detail:'L = 0 · R = 6',hot:0},
+    {l:0,r:6,msg:'First mirrored pair matches',cmp:'R = R  ✓',detail:'Match → both pointers can move inward',hot:0,done:[0,6]},
+    {l:1,r:5,msg:'Second mirrored pair matches',cmp:'A = A  ✓',detail:'Match → move inward again',hot:1,done:[0,1,5,6]},
+    {l:2,r:4,msg:'Third mirrored pair matches',cmp:'C = C  ✓',detail:'Match → only the center remains',hot:1,done:[0,1,2,4,5,6]},
+    {l:3,r:3,msg:'All mirrored characters matched',cmp:'PALINDROME  ✓',detail:'RACECAR reads the same from both ends',hot:2,done:[0,1,2,3,4,5,6],success:true}
+  ];
+  const st = states[Math.min(s,states.length-1)];
+  clearCells('inArray');
+  setPointer('inL',st.l,7);
+  setPointer('inR',st.r,7);
+  if (st.l === st.r) mark('inArray',st.l,'both-hot');
+  else {
+    mark('inArray',st.l,'left-hot');
+    mark('inArray',st.r,'right-hot');
+  }
+  (st.done || []).forEach(i => mark('inArray',i,'done'));
+  hotStatus('in',st.hot);
+  setBanner(st.msg);
+  setCompare('in',st.cmp,st.detail,st.success ? 'success' : '');
+  pulse('inArray');
+}
+
+function renderUni(s) {
+  const states = [
+    {arr:[0,1,0,3,12,0,5], slow:0, fast:0, msg:'Start scanning from the left', cmp:'Ready', detail:'slow = 0 · fast = 0', hot:0},
+    {arr:[0,1,0,3,12,0,5], slow:0, fast:0, msg:'Fast finds a zero', cmp:'arr[0] = 0', detail:'Zero → slow stays, fast moves', hot:0, kind:'warn'},
+    {arr:[0,1,0,3,12,0,5], slow:0, fast:1, msg:'Fast reaches the first non-zero', cmp:'arr[1] = 1 ≠ 0', detail:'Place 1 at slow', hot:1},
+    {arr:[1,0,0,3,12,0,5], slow:1, fast:2, msg:'1 moved forward; relative order is preserved', cmp:'arr[2] = 0', detail:'Zero → keep slow at 1, advance fast', hot:0},
+    {arr:[1,0,0,3,12,0,5], slow:1, fast:3, msg:'Fast finds 3', cmp:'arr[3] = 3 ≠ 0', detail:'Move 3 into the slow position', hot:1},
+    {arr:[1,3,0,0,12,0,5], slow:2, fast:4, msg:'Fast finds 12', cmp:'arr[4] = 12 ≠ 0', detail:'Move 12 into the slow position', hot:1},
+    {arr:[1,3,12,0,0,0,5], slow:3, fast:5, msg:'Another zero is skipped', cmp:'arr[5] = 0', detail:'Zero → slow stays, fast advances', hot:0, kind:'warn'},
+    {arr:[1,3,12,0,0,0,5], slow:3, fast:6, msg:'Fast finds the last non-zero', cmp:'arr[6] = 5 ≠ 0', detail:'Move 5 into the slow position', hot:1},
+    {arr:[1,3,12,5,0,0,0], slow:4, fast:6, msg:'All zeros have been pushed to the end', cmp:'DONE  ✓', detail:'[1, 3, 12, 5, 0, 0, 0]', hot:2, success:true}
+  ];
+  const st = states[Math.min(s,states.length-1)];
+  renderArray('uniArray', st.arr);
+  clearCells('uniArray');
+  setPointer('uniS',st.slow,7);
+  setPointer('uniF',st.fast,7);
+  for (let i=0;i<st.slow;i++) mark('uniArray',i,'done');
+  if (st.slow === st.fast) mark('uniArray',st.slow,'both-hot');
+  else {
+    mark('uniArray',st.slow,'left-hot');
+    mark('uniArray',st.fast,'right-hot');
+  }
+  hotStatus('uni',st.hot);
+  setBanner(st.msg);
+  setCompare('uni',st.cmp,st.detail,st.success ? 'success' : (st.kind || ''));
+  pulse('uniArray');
+}
+
+function renderParallel(s) {
+  const states = [
+    {i:0,j:0,msg:'Start both pointers at index 0',cmp:'Ready to compare',detail:'Highest so far: —',hot:0,max:null},
+    {i:0,j:0,msg:'Compare the first pair',cmp:'3 vs 9  →  9 wins',detail:'Highest so far: 9',hot:0,max:9},
+    {i:1,j:1,msg:'Advance both pointers',cmp:'14 vs 2  →  14 wins',detail:'Highest so far: 14',hot:1,max:14},
+    {i:2,j:2,msg:'Compare the next pair',cmp:'7 vs 18  →  18 wins',detail:'Highest so far: 18',hot:1,max:18},
+    {i:3,j:3,msg:'A produces a new maximum',cmp:'20 vs 6  →  20 wins',detail:'Highest so far: 20',hot:1,max:20},
+    {i:4,j:4,msg:'B produces an even larger value',cmp:'5 vs 22  →  22 wins',detail:'Highest so far: 22',hot:1,max:22},
+    {i:5,j:5,msg:'Compare the final pair',cmp:'11 vs 4  →  11 wins',detail:'Highest remains: 22',hot:1,max:22},
+    {i:5,j:5,msg:'Both arrays have been scanned',cmp:'HIGHEST = 22  ✓',detail:'Maximum across A and B',hot:2,max:22,success:true}
+  ];
+  const st = states[Math.min(s,states.length-1)];
+  renderArray('parArrayA', data.parallelA);
+  renderArray('parArrayB', data.parallelB);
+  clearCells('parArrayA');
+  clearCells('parArrayB');
+  setPointer('parA',st.i,6);
+  setPointer('parB',st.j,6);
+  mark('parArrayA',st.i,'left-hot');
+  mark('parArrayB',st.j,'right-hot');
+  if (st.max !== null) {
+    data.parallelA.forEach((v,i) => { if (v === st.max) mark('parArrayA',i,'max-hot'); });
+    data.parallelB.forEach((v,i) => { if (v === st.max) mark('parArrayB',i,'max-hot'); });
+  }
+  hotStatus('par',st.hot);
+  setBanner(st.msg);
+  setCompare('par',st.cmp,st.detail,st.success ? 'success' : '');
+  pulse('parArrayA');
+  pulse('parArrayB');
+}
+
+function render() {
+  stepNo.textContent = step;
+  stepTotal.textContent = totals[active] - 1;
+  if (active === 'inward') renderInward(step);
+  if (active === 'unidirectional') renderUni(step);
+  if (active === 'parallel') renderParallel(step);
+}
+
+function nextStep() {
+  step = (step + 1) % totals[active];
+  render();
+}
+
+function playbackDelay() {
+  return Math.round(1700 / Number(speedSlider.value));
+}
+
+function schedulePlayback() {
+  if (timer) clearInterval(timer);
+  timer = setInterval(nextStep, playbackDelay());
+}
+
+function start() {
+  playing = true;
+  playBtn.textContent = '❚❚ Pause';
+  nextStep();
+  schedulePlayback();
+}
+function stop() {
+  playing = false;
+  playBtn.textContent = '▶ Play';
+  if (timer) { clearInterval(timer); timer = null; }
+}
+function reset() {
+  stop();
+  step = 0;
+  render();
+}
+
+function switchTab(name) {
+  stop();
+  active = name;
+  step = 0;
+  tabs.forEach(t => {
+    const on = t.dataset.tab === name;
+    t.classList.toggle('active',on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('.viz').forEach(v => v.classList.remove('active'));
+  $('viz-'+name).classList.add('active');
+  render();
+}
+
+tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+playBtn.addEventListener('click', () => playing ? stop() : start());
+stepBtn.addEventListener('click', () => { stop(); nextStep(); });
+resetBtn.addEventListener('click', reset);
+speedSlider.addEventListener('input', () => {
+  const speed = Number(speedSlider.value);
+  speedValue.textContent = Number.isInteger(speed) ? `${speed}×` : `${speed.toFixed(2).replace(/0$/, '')}×`;
+  if (playing) schedulePlayback();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); playing ? stop() : start(); }
+  if (e.key === 'ArrowRight') { stop(); nextStep(); }
+  if (e.key === '1') switchTab('inward');
+  if (e.key === '2') switchTab('unidirectional');
+  if (e.key === '3') switchTab('parallel');
+});
+
+switchTab('inward');
+</script>
+</body>
+</html>

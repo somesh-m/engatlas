@@ -1,0 +1,108 @@
+id: performance
+name: Performance Engineering
+type: category
+children:
+  - id: cacheopt
+    name: Cache Optimization
+    type: category
+    children:
+      - id: cacheline
+        name: Cache Line Bouncing
+        type: concept
+      - id: falsesharing
+        name: False Sharing
+        type: concept
+      - id: cachecoherency
+        name: Cache Coherency
+        type: category
+        children:
+          - id: snoopingprotocol
+            name: Snopping Protocol
+            category: concept
+          - id: mesi
+            name: MESI
+            category: concept
+          - id: moesi
+            name: MOESI
+            category: concept
+      - id: alignment
+        name: Cache Line alignment
+        type: concept
+      - id: padding
+        name: Cache Line Padding
+        type: concept
+      - id: utilization
+        name: Cache Line utilization
+        type: concept
+      - id: locality
+        name: Locality
+        type: category
+        visualizer: /visualizers/cache-locality-visualizer.html
+        children:
+          - id: spatial
+            name: Spatial
+            type: concept
+          - id: temporal
+            name: Temporal
+            type: concept
+      - id: datalayout
+        name: Data Layout
+        type: category
+        children:
+          - id: aos
+            name: AOS
+            type: concept
+          - id: soa
+            name: SOA
+            type: concept
+      - id: tiling
+        name: Cache Blocking/Tiling
+        type: concept
+      - id: prefetching
+        name: Prefetching
+        type: concept
+      - id: associativity
+        name: Associativity
+        type: category
+        children:
+          - id: direct
+            name: Direct Mapped
+            type: concept
+          - id: fully
+            name: Fully Associative Cache
+            type: concept
+          - id: set
+            name: Set Associative Cache
+            type: concept
+      - id: writebehave
+        name: Write Behaviour
+        type: category
+        children:
+          - id: writeback
+            name: Write Back
+            type: concept
+          - id: writethrough
+            name: Write Through
+            type: concept
+          - id: writeallocate
+            name: Write Allocate
+            type: concept
+          - id: nowriteallocate
+            name: No Write Allocate
+            type: concept
+          - id: nontemporal
+            name: Non Temporal Writes
+            type: concept
+      - id: cachepolicy
+        name: Cache Policy
+        type: category
+        children:
+          - id: inclusive
+            name: Inclusive
+            type: concept
+          - id: exclusive
+            name: Exclusive
+            type: concept
+      - id: cacahepollution
+        name: Cache Pollution
+        type: concept

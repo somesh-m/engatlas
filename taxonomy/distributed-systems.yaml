@@ -1,0 +1,16 @@
+id: distributed-systems
+name: Distributed Systems
+type: category
+children:
+  - id: partioning
+    name: Partitioning
+    type: concept
+  - id: replication
+    name: Replication
+    type: concept
+  - id: consensus
+    name: Consensus
+    type: concept
+  - id: consistency
+    name: Consistency
+    type: concept

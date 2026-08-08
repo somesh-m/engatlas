@@ -1,0 +1,11 @@
+id: software-engineering
+name: Software Engineering
+type: root
+children:
+  - include: systems.yaml
+  - include: distributed-systems.yaml
+  - include: data-structures.yaml
+  - include: algorithms.yaml
+  - include: performance.yaml
+  - include: public-cloud.yaml
+  - include: design-patterns.yaml

@@ -1,0 +1,168 @@
+id: systems
+name: Systems
+type: category
+children:
+  - id: process
+    name: Server & Process
+    type: concept
+    children:
+      - id: stateless
+        name: Stateless
+        tye: concept
+      - id: stateful
+        name: Stateful
+        type: concept
+      - id: scaling
+        name: Scaling
+        type: category
+        children:
+          - id: vertical
+            name: Vertical Scaling
+            type: concept
+          - id: horizontal
+            name: Horizontal Scaling
+            type: concept
+      - id: workerthreads
+        name: Worker Threads
+        type: concept
+      - id: batch
+        name: Batch Processing
+        type: concept
+      - id: backgroundjobs
+        name: Background Jobs
+        type: concept
+      - id: cronjob
+        name: Cron Jobs
+        type: concept
+      - id: vm
+        name: Containers/VMs
+        type: concept
+  - id: networking
+    name: Networking
+    type: category
+    children:
+      - id: tcp
+        name: TCP
+        type: concept
+      - id: udp
+        name: UDP
+        type: concept
+      - id: dns
+        name: DNS
+        type: concept
+      - id: https
+        name: HTTPS
+        type: concept
+      - id: tls
+        name: TLS
+        type: concept
+      - id: ssh
+        name: SSH
+        type: concept
+      - id: loadbalancer
+        name: Load Balancers
+        type: concept
+      - id: reverseproxy
+        name: Reverse Proxy
+        type: concept
+      - id: cdn
+        name: CDN
+        type: concept
+      - id: servicediscovery
+        name: Service Discovery
+        type: concept
+  - id: storage
+    name: Storage
+    type: concept
+    children:
+      - id: database
+        name: Database
+        type: concept
+        children:
+          - id: sql
+            name: SQL
+            type: concept
+            children:
+              - id: postgres
+                name: PostgreSQL
+                type: technology
+              - id: mysql
+                name: MYSQL
+                type: technology
+          - id: nosql
+            name: NoSQL
+            type: concept
+            children:
+              - id: keyvalue
+                name: Key Value
+                type: concept
+              - id: document
+                name: Document
+                type: concept
+              - id: widecolumn
+                name: Wide Column
+                type: concept
+              - id: graphdb
+                name: Graph
+                type: concept
+              - id: vector
+                name: Vector
+                type: concept
+      - id: object-storage
+        name: Object Storage
+        type: concept
+      - id: archive
+        name: Archive Storage
+        type: concept
+
+  - id: cache
+    name: Cache
+    type: concept
+    children:
+      - id: local-cache
+        name: Local Cache
+        type: concept
+      - id: distributed-cache
+        name: Distributed Cache
+        type: concept
+        children:
+          - id: redis
+            name: Redis
+            type: technology
+          - id: memcached
+            name: Memcached
+            type: technology
+          - id: valkey
+            name: Valkey
+            type: technology
+  - id: communication
+    name: Communication
+    type: category
+    children:
+      - id: rest
+        name: REST
+        type: concept
+      - id: grpc
+        name: gRPC
+        type: concept
+      - id: GraphQL
+        name: graphql
+        type: concept
+      - id: websocket
+        name: Websocket
+        type: concept
+      - id: sse
+        name: SSE
+        type: concept
+      - id: webhooks
+        name: Webhooks
+        type: concept
+      - id: queue
+        name: Messaging queue
+        type: concept
+      - id: pubsub
+        name: Pub/Sub
+        type: concept
+      - id: eventstream
+        name: Event Stream
+        type: concept

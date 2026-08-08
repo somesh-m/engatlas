@@ -1,0 +1,67 @@
+id: public-cloud
+name: Public Cloud
+type: category
+children:
+  - id: aws
+    name: AWS
+    type: category
+    children:
+      - id: awscompute
+        name: Amazon Elastic Compute Cloud
+        type: concept
+        children:
+          - id: ec2
+            name: Amazon EC2
+            type: technology
+          - id: lightsail
+            name: Amazon Lightsail
+            type: technology
+          - id: beanstalk
+            name: AWS Elastic Beanstalk
+            type: technology
+          - id: lambda
+            name: AWS Lambda
+            type: technology
+          - id: awsbatch
+            name: AWS Batch
+            type: technology
+  - id: googlecloud
+    name: Google Cloud
+    type: category
+    children:
+      - id: compute
+        name: Compute
+        type: concept
+        children:
+          - id: computeengine
+            name: Compute Engine
+            type: technology
+          - id: appengine
+            name: App Engine
+            type: technology
+          - id: cloudrun
+            name: Cloud Run
+            type: technology
+  - id: azure
+    name: Azure
+    type: category
+    children:
+      - id: azurecompute
+        name: Azure Compute
+        type: concept
+        children:
+          - id: azurevms
+            name: Azure VMs
+            type: technology
+          - id: appservice
+            name: App Service
+            type: technology
+          - id: azurecontainer
+            name: Azure Container Instance
+            type: technology
+          - id: aks
+            name: Azure Kubernetes Services
+            type: technology
+          - id: winvirtdesktop
+            name: Windows Virtual Desktop
+            type: technology

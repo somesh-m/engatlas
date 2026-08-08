@@ -1,0 +1,22 @@
+---
+title: False Sharing
+atlas_id: falsesharing
+description: How independent variables sharing one cache line can create unnecessary coherence traffic between CPU cores.
+---
+
+# False Sharing
+
+False sharing is a performance-degrading issue in multi-threaded programs. It happens when separate CPU cores modify independent variable that reside on the same cache line. Even though the variables are completely independent and unrelated, they reside on the same cache line. When any variable in a cache line is modified the CPU memory subsystem will treat the entire cache line to be modified. So before another thread can access a seemingly independent variable, the cache line needs to be updated to present a coherent view to the thread.
+This task is done by the Cache Coherency Controller which tracks the cache states using MESI or MOESI protocol.
+
+---
+
+## How to Fix It
+
+- **Explicit Alignment:** Align structures to 64-byte boundaries.
+  - **C++:** `alignas(64)`
+  - **Rust:** `#[repr(align(64))]`
+- **Padding:** Insert dummy byte arrays between variables to force distinct cache line allocations.
+- **Thread-Local Storage:** Compute updates in thread-local variables and flush to shared memory periodically.
+
+*Read in detail at:* [Medium: Multithreaded Performance in Rust](https://medium.com/@somesh557/i-wrote-a-simple-multithreaded-code-in-rust-but-the-performance-didnt-increase-much-with-an-8943648431ff?sharedUserId=somesh557)
