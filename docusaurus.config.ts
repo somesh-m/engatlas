@@ -7,8 +7,10 @@ const config: Config = {
   tagline: 'A growing map of software engineering concepts and technologies',
   favicon: 'img/favicon.svg',
 
-  url: 'https://example.com',
+  url: 'https://engatlas.dev',
   baseUrl: '/',
+  organizationName: 'somesh-m',
+  projectName: 'engatlas',
 
   onBrokenLinks: 'throw',
 
@@ -46,9 +48,9 @@ const config: Config = {
       title: 'Engineering Atlas',
       items: [
         {to: '/atlas', label: 'Atlas', position: 'left'},
-        {to: '/learn/intro', label: 'Learn', position: 'left'},
+        // {to: '/learn/intro', label: 'Learn', position: 'left'},
         {
-          href: 'https://github.com/your-name/engineering-atlas',
+          href: 'https://github.com/somesh-m/engatlas',
           label: 'GitHub',
           position: 'right',
         },
