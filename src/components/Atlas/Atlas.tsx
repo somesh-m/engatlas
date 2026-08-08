@@ -4,7 +4,6 @@ import { usePluginData } from '@docusaurus/useGlobalData';
 import {
   Background,
   Controls,
-  MiniMap,
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
@@ -19,16 +18,6 @@ import styles from './atlas.module.css';
 
 const nodeTypes = { atlasNode: AtlasNode };
 const emptyTaxonomy: Taxonomy = { nodes: [], edges: [] };
-const miniMapColors = {
-  covered: '#34a76f',
-  partial: '#e5a11a',
-  planned: '#7c8798',
-};
-
-function getMiniMapNodeColor(node: Node) {
-  const status = (node.data as TaxonomyNode).status;
-  return miniMapColors[status] ?? '#7c8798';
-}
 
 function ContentDialog({
   node,
@@ -498,20 +487,6 @@ function AtlasCanvas() {
             nodesConnectable={false}
             elementsSelectable
           >
-            <MiniMap
-              className={styles.miniMap}
-              position="top-right"
-              nodeColor={getMiniMapNodeColor}
-              nodeStrokeColor="#dbe5f1"
-              nodeStrokeWidth={1.5}
-              nodeBorderRadius={8}
-              bgColor="#111722"
-              maskColor="rgb(2 6 15 / 68%)"
-              maskStrokeColor="#60a5fa"
-              maskStrokeWidth={1.5}
-              pannable
-              zoomable
-            />
             <Controls showInteractive={false} />
             <Background gap={24} size={1} />
           </ReactFlow>

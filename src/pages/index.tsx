@@ -21,9 +21,9 @@ export default function Home() {
               <Link className="button button--primary button--lg" to="/atlas">
                 Explore the atlas
               </Link>
-              <Link className="button button--secondary button--lg" to="/learn/intro">
+              {/* <Link className="button button--secondary button--lg" to="/learn/intro">
                 Browse articles
-              </Link>
+              </Link> */}
             </div>
           </div>
         </section>

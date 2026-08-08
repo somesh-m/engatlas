@@ -44,6 +44,11 @@ const config: Config = {
   ],
 
   themeConfig: {
+    colorMode: {
+      defaultMode: 'dark',
+      disableSwitch: false,
+      respectPrefersColorScheme: false,
+    },
     navbar: {
       title: 'Engineering Atlas',
       items: [
@@ -63,11 +68,11 @@ const config: Config = {
           title: 'Explore',
           items: [
             {label: 'Interactive Atlas', to: '/atlas'},
-            {label: 'Content Library', to: '/learn/intro'},
+            // {label: 'Content Library', to: '/learn/intro'},
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Engineering Atlas.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Engineering Map.`,
     },
     prism: {
       theme: prismThemes.github,
