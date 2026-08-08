@@ -69,6 +69,8 @@ function ContentDialog({
 
     if (!hideSiteChrome || frameDocument.querySelector('[data-atlas-embed-styles]')) return;
 
+    frameDocument.documentElement.setAttribute('data-theme', 'dark');
+
     const styles = frameDocument.createElement('style');
     styles.dataset.atlasEmbedStyles = 'true';
     styles.textContent = `

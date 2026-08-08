@@ -7,10 +7,10 @@ const config: Config = {
   tagline: 'A growing map of software engineering concepts and technologies',
   favicon: 'img/favicon.svg',
 
-  url: 'https://engatlas.dev',
+  url: 'https://engmap.dev',
   baseUrl: '/',
   organizationName: 'somesh-m',
-  projectName: 'engatlas',
+  projectName: 'engmap',
 
   onBrokenLinks: 'throw',
 

@@ -261,7 +261,7 @@
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 14%);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--ifm-background-color) 86%, transparent);
+  background: rgb(10 15 24 / 92%);
   backdrop-filter: blur(16px);
   box-shadow: 0 24px 80px rgb(0 0 0 / 55%);
 }
@@ -272,6 +272,7 @@
   height: 100%;
   border: 0;
   background: transparent;
+  color-scheme: dark;
 }
 
 .visualizerClose {
@@ -293,6 +294,33 @@
 .visualizerClose:hover {
   background: #c2413b;
   border-color: #c2413b;
+}
+
+:global(html[data-theme='light']) .canvas {
+  background: #f8fafc;
+}
+
+:global(html[data-theme='light']) .toolbar,
+:global(html[data-theme='light']) .details {
+  border-color: rgb(148 163 184 / 42%);
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 10px 30px rgb(15 23 42 / 12%);
+}
+
+:global(html[data-theme='light']) .node {
+  border-color: #cbd5e1;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(15 23 42 / 10%);
+}
+
+:global(html[data-theme='light']) .visualizerOverlay {
+  background: rgb(15 23 42 / 34%);
+}
+
+:global(html[data-theme='light']) .visualizerPanel {
+  border-color: rgb(96 165 250 / 32%);
+  background: rgb(10 15 24 / 90%);
+  box-shadow: 0 24px 80px rgb(15 23 42 / 42%);
 }
 
 @media (max-width: 700px) {
