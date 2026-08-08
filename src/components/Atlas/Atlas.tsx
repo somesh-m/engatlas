@@ -487,7 +487,7 @@ function AtlasCanvas() {
             nodesConnectable={false}
             elementsSelectable
           >
-            <Controls showInteractive={false} />
+            <Controls className={styles.flowControls} showInteractive={false} />
             <Background gap={24} size={1} />
           </ReactFlow>
         </div>

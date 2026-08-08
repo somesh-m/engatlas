@@ -78,6 +78,40 @@
   background: var(--ifm-background-surface-color);
 }
 
+.flowControls {
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 40%);
+  border-radius: 10px;
+  background: #111827;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 32%);
+}
+
+.flowControls :global(.react-flow__controls-button) {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-bottom: 1px solid rgb(148 163 184 / 28%);
+  background: #111827;
+  color: #f8fafc;
+}
+
+.flowControls :global(.react-flow__controls-button:last-child) {
+  border-bottom: 0;
+}
+
+.flowControls :global(.react-flow__controls-button:hover) {
+  background: #2563eb;
+  color: #fff;
+}
+
+.flowControls :global(.react-flow__controls-button svg) {
+  width: 17px;
+  max-width: 17px;
+  height: 17px;
+  max-height: 17px;
+  fill: currentColor;
+}
+
 .details {
   position: absolute;
   z-index: 10;
@@ -291,6 +325,23 @@
 
 :global(html[data-theme='light']) .canvas {
   background: #f8fafc;
+}
+
+:global(html[data-theme='light']) .flowControls {
+  border-color: rgb(100 116 139 / 45%);
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 18%);
+}
+
+:global(html[data-theme='light']) .flowControls :global(.react-flow__controls-button) {
+  border-bottom-color: rgb(100 116 139 / 24%);
+  background: #fff;
+  color: #0f172a;
+}
+
+:global(html[data-theme='light']) .flowControls :global(.react-flow__controls-button:hover) {
+  background: #2563eb;
+  color: #fff;
 }
 
 :global(html[data-theme='light']) .toolbar,
