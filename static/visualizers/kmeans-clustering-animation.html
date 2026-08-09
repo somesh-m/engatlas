@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>K-Means Clustering Animation</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --panel:#11182a;
+    --panel2:#0d1424;
+    --border:#26334a;
+    --text:#e9eef7;
+    --muted:#8d9ab0;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  .wrap{width:min(1180px,calc(100vw - 28px));margin:20px auto}
+  .card{
+    background:linear-gradient(180deg,#121a2d,#0d1423);
+    border:1px solid var(--border);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 18px 60px rgba(0,0,0,.3);
+  }
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;gap:16px;
+    padding:14px 16px;border-bottom:1px solid var(--border);
+  }
+  .title{font-size:15px;font-weight:700}
+  .subtitle{font-size:12px;color:var(--muted);margin-top:3px}
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  button{
+    border:1px solid #31405b;background:#151f34;color:#e6edf7;
+    border-radius:9px;padding:8px 11px;font-size:12px;cursor:pointer;
+  }
+  button:hover{background:#1b2943}
+  button.primary{background:#20345b;border-color:#3e5f9a}
+  .speed{
+    display:flex;align-items:center;gap:7px;padding:5px 9px;
+    border:1px solid #31405b;border-radius:9px;background:#111a2c;
+    color:#8d9ab0;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  input[type=range]{width:90px}
+  .stages{
+    display:grid;grid-template-columns:repeat(5,1fr);
+    background:var(--panel2);border-bottom:1px solid var(--border);
+  }
+  .stage{
+    padding:10px 6px;text-align:center;color:#66758d;
+    font:10px ui-monospace,SFMono-Regular,Menlo,monospace;
+    border-right:1px solid #1c2940;position:relative;
+  }
+  .stage:last-child{border-right:0}
+  .stage.active{color:#f2f6fd;background:rgba(82,116,184,.12)}
+  .stage.active:after{
+    content:"";position:absolute;height:2px;left:18%;right:18%;bottom:0;
+    background:#7aa2ff;border-radius:2px;
+  }
+  .viz{position:relative;height:min(690px,calc(100vh - 195px));min-height:560px}
+  svg{display:block;width:100%;height:100%}
+  .status{
+    position:absolute;left:16px;bottom:14px;padding:7px 10px;
+    display:flex;align-items:center;gap:8px;border-radius:9px;
+    background:rgba(10,15,27,.86);border:1px solid #2d3a54;
+    color:#a2aec1;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .status-dot{width:7px;height:7px;border-radius:50%;background:#7aa2ff;box-shadow:0 0 10px rgba(122,162,255,.6)}
+  .foot{
+    border-top:1px solid var(--border);padding:10px 15px;color:#718096;
+    font-size:11px;line-height:1.45;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="topbar">
+      <div>
+        <div class="title">K-Means Clustering</div>
+        <div class="subtitle">4 centroids · 5 iterations · assign → mean → move centroid → recalculate distance → repeat</div>
+      </div>
+      <div class="controls">
+        <button id="pause" class="primary">Pause</button>
+        <button id="restart">Restart</button>
+        <button id="newRun">New run</button>
+        <div class="speed">
+          speed
+          <input id="speed" type="range" min="0.5" max="2" step="0.25" value="1">
+          <span id="speedText">1×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stages">
+      <div class="stage active">1 · PICK SEEDS</div>
+      <div class="stage">2 · ASSIGN</div>
+      <div class="stage">3 · FIND MEAN</div>
+      <div class="stage">4 · RECALC DIST</div>
+      <div class="stage">5 · REPEAT</div>
+    </div>
+
+    <div class="viz">
+      <svg id="svg" viewBox="0 0 1160 650">
+        <defs>
+          <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+            <path d="M28 0H0V28" fill="none" stroke="#152038" stroke-width="1"/>
+          </pattern>
+          <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#9fc0ff"/>
+          </marker>
+          <marker id="arrowPink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#f2a5d6"/>
+          </marker>
+          <marker id="arrowGold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#f7ce8b"/>
+          </marker>
+          <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#9ce0bb"/>
+          </marker>
+        </defs>
+
+        <rect width="1160" height="650" fill="url(#grid)" opacity=".7"/>
+        <g id="array"></g>
+        <text x="42" y="170" fill="#66758d" font-size="11" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">VECTOR SPACE</text>
+        <line x1="42" y1="180" x2="1118" y2="180" stroke="#22304a"/>
+        <g id="regions"></g>
+        <g id="distanceArrows"></g>
+        <g id="meanMarks"></g>
+        <g id="points"></g>
+        <g id="centroids"></g>
+        <g id="iterationBadge">
+          <rect x="960" y="46" width="158" height="32" rx="9" fill="#10192c" stroke="#2c3c58"/>
+          <text id="iterationText" x="1039" y="66" text-anchor="middle" fill="#b8c5d9" font-size="11" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">Iteration: 0 / 5</text>
+        </g>
+      </svg>
+
+      <div class="status"><span class="status-dot"></span><span id="statusText">initializing</span></div>
+    </div>
+
+    <div class="foot">
+      After each mean is found, the centroid moves to that mean. The next step explicitly draws distance arrows again before vectors are reassigned.
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("svg");
+  const arrayG = document.getElementById("array");
+  const regionG = document.getElementById("regions");
+  const arrowG = document.getElementById("distanceArrows");
+  const meanG = document.getElementById("meanMarks");
+  const pointG = document.getElementById("points");
+  const centroidG = document.getElementById("centroids");
+  const statusText = document.getElementById("statusText");
+  const iterationText = document.getElementById("iterationText");
+  const stageEls = [...document.querySelectorAll(".stage")];
+  const pauseBtn = document.getElementById("pause");
+  const restartBtn = document.getElementById("restart");
+  const newRunBtn = document.getElementById("newRun");
+  const speedInput = document.getElementById("speed");
+  const speedText = document.getElementById("speedText");
+
+  const COLORS = [
+    {main:"#73a7ff", soft:"#9fc0ff", fill:"rgba(115,167,255,.08)", marker:"arrowBlue"},
+    {main:"#ef78c6", soft:"#f2a5d6", fill:"rgba(239,120,198,.08)", marker:"arrowPink"},
+    {main:"#f5b95f", soft:"#f7ce8b", fill:"rgba(245,185,95,.08)", marker:"arrowGold"},
+    {main:"#72d29b", soft:"#9ce0bb", fill:"rgba(114,210,155,.08)", marker:"arrowGreen"}
+  ];
+
+  const N = 24;
+  const K = 4;
+  const FIELD = {x:72,y:220,w:1015,h:350};
+
+  let points = [];
+  let centroids = [];
+  let seeds = [];
+  let pointEls = [];
+  let centroidEls = [];
+  let regionEls = [];
+  let arrayCells = [];
+  let runToken = 0;
+  let paused = false;
+  let speedFactor = 1;
+  let iteration = 0;
+
+  function el(tag, attrs = {}) {
+    const n = document.createElementNS(SVG_NS, tag);
+    for (const [k,v] of Object.entries(attrs)) n.setAttribute(k, v);
+    return n;
+  }
+
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  async function wait(ms, token) {
+    let remaining = ms;
+    while (remaining > 0 && token === runToken) {
+      if (!paused) {
+        const slice = Math.min(50, remaining);
+        await new Promise(r => setTimeout(r, slice / speedFactor));
+        remaining -= slice;
+      } else {
+        await new Promise(r => setTimeout(r, 60));
+      }
+    }
+  }
+
+  function stage(i, text) {
+    stageEls.forEach((s,idx)=>s.classList.toggle("active", idx===i));
+    statusText.textContent = text;
+  }
+
+  function updateIterationBadge(current) {
+    iterationText.textContent = `Iteration: ${current} / 5`;
+  }
+
+  function irregularPath(cx,cy,rx,ry,seed){
+    const pts=[];
+    const count=12;
+    for(let i=0;i<count;i++){
+      const a=2*Math.PI*i/count;
+      const wobble=1 + .10*Math.sin(seed+i*1.61) + .05*Math.cos(seed*.7+i*2.18);
+      pts.push({x:cx+Math.cos(a)*rx*wobble,y:cy+Math.sin(a)*ry*wobble});
+    }
+    let d="";
+    for(let i=0;i<count;i++){
+      const p0=pts[(i-1+count)%count], p1=pts[i], p2=pts[(i+1)%count], p3=pts[(i+2)%count];
+      if(i===0) d+=`M ${p1.x} ${p1.y} `;
+      const c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+      const c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+      d+=`C ${c1x} ${c1y} ${c2x} ${c2y} ${p2.x} ${p2.y} `;
+    }
+    return d+"Z";
+  }
+
+  function buildArray(){
+    arrayG.innerHTML="";
+    arrayCells=[];
+    const left=42, right=1118, y=46, h=70;
+    const cellW=(right-left)/N;
+
+    const label=el("text",{x:left,y:28,fill:"#7f8ca3","font-size":11,"font-family":"ui-monospace,SFMono-Regular,Menlo,monospace"});
+    label.textContent="VECTOR ARRAY";
+    arrayG.appendChild(label);
+
+    for(let i=0;i<N;i++){
+      const x=left+i*cellW;
+      const r=el("rect",{x:x+1,y,width:cellW-2,height:h,rx:7,fill:"#10192b",stroke:"#26344f"});
+      const t=el("text",{x:x+cellW/2,y:y+40,"text-anchor":"middle",fill:"#94a1b6","font-size":10,"font-family":"ui-monospace,SFMono-Regular,Menlo,monospace"});
+      t.textContent=`v${i+1}`;
+      arrayG.append(r,t);
+      arrayCells.push({r,t,x:x+cellW/2,y:y+35});
+    }
+  }
+
+  function createScene(){
+    regionG.innerHTML="";
+    arrowG.innerHTML="";
+    meanG.innerHTML="";
+    pointG.innerHTML="";
+    centroidG.innerHTML="";
+    pointEls=[];
+    centroidEls=[];
+    regionEls=[];
+    points=[];
+    centroids=[];
+    iteration=0;
+    updateIterationBadge(0);
+
+    buildArray();
+
+    const indexes=[...Array(N).keys()];
+    for(let i=indexes.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [indexes[i],indexes[j]]=[indexes[j],indexes[i]];
+    }
+    seeds=indexes.slice(0,K);
+
+    const baseY=FIELD.y+FIELD.h*.52;
+    for(let c=0;c<K;c++){
+      const cx=FIELD.x+FIELD.w*((c+.5)/K)+rand(-15,15);
+      const cy=baseY+rand(-50,50);
+      centroids.push({x:cx,y:cy});
+      const rx=116+rand(-8,12), ry=120+rand(-10,20);
+      const region=el("path",{
+        d:irregularPath(cx,cy,rx,ry,rand(1,50)),
+        fill:COLORS[c].fill,stroke:COLORS[c].main,"stroke-width":2,
+        "stroke-dasharray":"6 7",opacity:0
+      });
+      region.style.transition="opacity 450ms ease, d 800ms ease";
+      regionG.appendChild(region);
+      regionEls.push({el:region,rx,ry,seed:rand(1,50)});
+
+      const cg=el("g",{transform:`translate(${cx} ${cy})`,opacity:0});
+      cg.style.transition="transform 1000ms cubic-bezier(.2,.8,.2,1), opacity 350ms ease";
+      const halo=el("circle",{cx:0,cy:0,r:18,fill:"none",stroke:COLORS[c].main,"stroke-width":1,opacity:.35});
+      const diamond=el("rect",{x:-7,y:-7,width:14,height:14,rx:2,fill:"#10182a",stroke:COLORS[c].main,"stroke-width":2,transform:"rotate(45)"});
+      const label=el("text",{x:0,y:-25,"text-anchor":"middle",fill:COLORS[c].soft,"font-size":10,"font-family":"ui-monospace,SFMono-Regular,Menlo,monospace"});
+      label.textContent=`C${c+1}`;
+      cg.append(halo,diamond,label);
+      centroidG.appendChild(cg);
+      centroidEls.push(cg);
+    }
+
+    // Generate 2D vectors around four natural groups.
+    for(let i=0;i<N;i++){
+      let cluster=Math.floor(Math.random()*K);
+      if(seeds.includes(i)) cluster=seeds.indexOf(i);
+
+      const ctr=centroids[cluster];
+      const a=rand(0,Math.PI*2);
+      const rr=Math.sqrt(Math.random());
+      const px=ctr.x+Math.cos(a)*rand(65,105)*rr;
+      const py=ctr.y+Math.sin(a)*rand(65,110)*rr;
+
+      const start=arrayCells[i];
+      const g=el("g",{transform:`translate(${start.x} ${start.y})`});
+      g.style.transition="transform 1550ms cubic-bezier(.2,.75,.2,1)";
+      const circle=el("circle",{cx:0,cy:0,r:4.5,fill:"#8b98ad",stroke:"#0a0f1a","stroke-width":1.4});
+      g.appendChild(circle);
+      pointG.appendChild(g);
+
+      points.push({id:i,x:px,y:py,cluster});
+      pointEls.push({g,circle});
+    }
+  }
+
+  function meanForCluster(c){
+    const members=points.filter(p=>p.cluster===c);
+    if(!members.length) return {...centroids[c]};
+    return {
+      x:members.reduce((s,p)=>s+p.x,0)/members.length,
+      y:members.reduce((s,p)=>s+p.y,0)/members.length
+    };
+  }
+
+  function nearestCentroid(p){
+    let best=0,bestD=Infinity;
+    for(let c=0;c<K;c++){
+      const dx=p.x-centroids[c].x, dy=p.y-centroids[c].y;
+      const d=dx*dx+dy*dy;
+      if(d<bestD){bestD=d;best=c}
+    }
+    return best;
+  }
+
+  function updateRegion(c){
+    const members=points.filter(p=>p.cluster===c);
+    if(!members.length) return;
+    const mx=members.reduce((s,p)=>s+p.x,0)/members.length;
+    const my=members.reduce((s,p)=>s+p.y,0)/members.length;
+    let maxX=80,maxY=80;
+    members.forEach(p=>{
+      maxX=Math.max(maxX,Math.abs(p.x-mx)+38);
+      maxY=Math.max(maxY,Math.abs(p.y-my)+38);
+    });
+    const info=regionEls[c];
+    info.seed+=.4;
+    info.el.setAttribute("d",irregularPath(mx,my,Math.min(150,maxX),Math.min(145,maxY),info.seed));
+  }
+
+  async function pickSeeds(token){
+    stage(0,"randomly selecting 4 vectors as starting centroids");
+    seeds.forEach((idx,c)=>{
+      arrayCells[idx].r.setAttribute("fill",COLORS[c].fill);
+      arrayCells[idx].r.setAttribute("stroke",COLORS[c].main);
+      arrayCells[idx].r.setAttribute("stroke-width","2");
+      arrayCells[idx].t.setAttribute("fill",COLORS[c].soft);
+      pointEls[idx].circle.setAttribute("fill",COLORS[c].main);
+      pointEls[idx].circle.setAttribute("r","6");
+    });
+    await wait(850,token);
+
+    regionEls.forEach(r=>r.el.setAttribute("opacity",".9"));
+    centroidEls.forEach(c=>c.setAttribute("opacity","1"));
+
+    seeds.forEach((idx,c)=>{
+      pointEls[idx].g.setAttribute("transform",`translate(${centroids[c].x} ${centroids[c].y})`);
+      points[idx].x=centroids[c].x;
+      points[idx].y=centroids[c].y;
+      points[idx].cluster=c;
+    });
+    await wait(1900,token);
+  }
+
+  async function assignVectors(token){
+    stage(1,"moving vectors from the array into the vector space");
+    points.forEach((p,i)=>{
+      const c=p.cluster;
+      pointEls[i].circle.setAttribute("fill",COLORS[c].main);
+      pointEls[i].g.setAttribute("transform",`translate(${p.x} ${p.y})`);
+      if(!seeds.includes(i)){
+        arrayCells[i].r.setAttribute("fill","#0e1626");
+        arrayCells[i].r.setAttribute("stroke","#1e2a40");
+        arrayCells[i].t.setAttribute("fill","#58657a");
+      }
+    });
+    // Deliberately slow so users can follow vectors leaving the array.
+    await wait(2300,token);
+  }
+
+  async function findMeansAndMove(token){
+    updateIterationBadge(iteration + 1);
+    stage(2,`iteration ${iteration + 1} · finding the mean of each cluster`);
+    meanG.innerHTML="";
+
+    const means=[];
+    for(let c=0;c<K;c++){
+      const m=meanForCluster(c);
+      means.push(m);
+      const g=el("g",{opacity:0});
+      g.style.transition="opacity 300ms ease";
+      const ring=el("circle",{cx:m.x,cy:m.y,r:15,fill:"none",stroke:COLORS[c].soft,"stroke-width":1.5,"stroke-dasharray":"3 4"});
+      const l1=el("line",{x1:m.x-10,y1:m.y,x2:m.x+10,y2:m.y,stroke:COLORS[c].soft,"stroke-width":2});
+      const l2=el("line",{x1:m.x,y1:m.y-10,x2:m.x,y2:m.y+10,stroke:COLORS[c].soft,"stroke-width":2});
+      const txt=el("text",{x:m.x+16,y:m.y-12,fill:COLORS[c].soft,"font-size":9,"font-family":"ui-monospace,SFMono-Regular,Menlo,monospace"});
+      txt.textContent="mean";
+      g.append(ring,l1,l2,txt);
+      meanG.appendChild(g);
+      requestAnimationFrame(()=>g.setAttribute("opacity","1"));
+    }
+
+    await wait(900,token);
+    statusText.textContent=`iteration ${iteration + 1} · moving each centroid to its newly calculated mean`;
+
+    for(let c=0;c<K;c++){
+      centroids[c]=means[c];
+      centroidEls[c].setAttribute("transform",`translate(${means[c].x} ${means[c].y})`);
+    }
+    await wait(1300,token);
+    meanG.innerHTML="";
+  }
+
+  async function recalcDistances(token){
+    updateIterationBadge(iteration + 1);
+    stage(3,`iteration ${iteration + 1} · centroids moved — recalculating vector distances`);
+    arrowG.innerHTML="";
+
+    // Make the recalculation explicit. We show arrows to representative points
+    // from every centroid, then reassignment happens afterwards.
+    const representativeIds=[];
+    for(let c=0;c<K;c++){
+      const members=points
+        .map((p,i)=>({i,p,d:(p.x-centroids[c].x)**2+(p.y-centroids[c].y)**2}))
+        .sort((a,b)=>a.d-b.d)
+        .slice(0,4);
+      representativeIds.push(...members.map(m=>m.i));
+
+      members.forEach(({p})=>{
+        const line=el("line",{
+          x1:centroids[c].x,y1:centroids[c].y,
+          x2:centroids[c].x,y2:centroids[c].y,
+          stroke:COLORS[c].soft,"stroke-width":1.6,
+          "stroke-dasharray":"5 5",
+          "marker-end":`url(#${COLORS[c].marker})`,
+          opacity:.9
+        });
+        line.style.transition="x2 850ms ease, y2 850ms ease, opacity 350ms ease";
+        arrowG.appendChild(line);
+        requestAnimationFrame(()=>{
+          line.setAttribute("x2",p.x);
+          line.setAttribute("y2",p.y);
+        });
+      });
+
+      const label=el("text",{
+        x:centroids[c].x+14,y:centroids[c].y+25,
+        fill:COLORS[c].soft,"font-size":9,
+        "font-family":"ui-monospace,SFMono-Regular,Menlo,monospace"
+      });
+      label.textContent="recalculate distance";
+      arrowG.appendChild(label);
+    }
+
+    await wait(1500,token);
+  }
+
+  async function reassign(token){
+    updateIterationBadge(iteration + 1);
+    stage(4,`iteration ${iteration + 1} · reassigning each vector to its nearest centroid`);
+    arrowG.querySelectorAll("line").forEach(l=>l.setAttribute("opacity",".10"));
+
+    let changes=0;
+    const changedIndexes=[];
+
+    points.forEach((p,i)=>{
+      const best=nearestCentroid(p);
+      if(best!==p.cluster){
+        p.cluster=best;
+        changes++;
+        changedIndexes.push(i);
+
+        // For this animation we explicitly move vectors that changed cluster
+        // into the new centroid's region so the reassignment is easy to see.
+        const ctr=centroids[best];
+        const a=rand(0,Math.PI*2);
+        const rr=0.35 + Math.random()*0.45;
+        const dx=Math.cos(a)*rand(55,100)*rr;
+        const dy=Math.sin(a)*rand(55,95)*rr;
+
+        p.x=ctr.x + dx;
+        p.y=ctr.y + dy;
+
+        pointEls[i].g.setAttribute("transform",`translate(${p.x} ${p.y})`);
+      } else {
+        // Even if a point stays in the same cluster, give it a tiny settling
+        // motion toward the current centroid so each iteration looks alive.
+        const ctr=centroids[p.cluster];
+        p.x = p.x * 0.82 + ctr.x * 0.18;
+        p.y = p.y * 0.82 + ctr.y * 0.18;
+        pointEls[i].g.setAttribute("transform",`translate(${p.x} ${p.y})`);
+      }
+
+      pointEls[i].circle.setAttribute("fill",COLORS[p.cluster].main);
+    });
+
+    for(let c=0;c<K;c++) updateRegion(c);
+
+    // Briefly highlight vectors that changed clusters.
+    changedIndexes.forEach(i=>{
+      pointEls[i].circle.setAttribute("r","6.2");
+    });
+
+    await wait(1200,token);
+
+    changedIndexes.forEach(i=>{
+      pointEls[i].circle.setAttribute("r","4.5");
+    });
+
+    iteration++;
+    arrowG.innerHTML="";
+    return changes;
+  }
+
+  async function run(token){
+    await pickSeeds(token);
+    if(token!==runToken) return;
+    await assignVectors(token);
+
+    for(let pass=0; pass<5 && token===runToken; pass++){
+      await findMeansAndMove(token);
+      if(token!==runToken) return;
+      await recalcDistances(token);
+      if(token!==runToken) return;
+      await reassign(token);
+    }
+
+    if(token!==runToken) return;
+    updateIterationBadge(iteration);
+    stage(4,"converged");
+    statusText.textContent=`completed ${iteration} / 5 iterations`;
+    regionEls.forEach(r=>r.el.setAttribute("stroke-dasharray","0"));
+
+    const testMode=new URLSearchParams(location.search).has("test");
+    if(!testMode){
+      await wait(2600,token);
+      if(token===runToken) startNewRun();
+    }
+  }
+
+  function startNewRun(){
+    runToken++;
+    paused=false;
+    pauseBtn.textContent="Pause";
+    createScene();
+    run(runToken);
+  }
+
+  pauseBtn.addEventListener("click",()=>{
+    paused=!paused;
+    pauseBtn.textContent=paused?"Play":"Pause";
+    statusText.textContent=paused?"paused":statusText.textContent;
+  });
+
+  restartBtn.addEventListener("click",()=>startNewRun());
+  newRunBtn.addEventListener("click",()=>startNewRun());
+
+  speedInput.addEventListener("input",()=>{
+    speedFactor=parseFloat(speedInput.value);
+    speedText.textContent=`${speedFactor % 1 === 0 ? speedFactor.toFixed(0) : speedFactor}×`;
+  });
+
+  startNewRun();
+})();
+</script>
+</body>
+</html>

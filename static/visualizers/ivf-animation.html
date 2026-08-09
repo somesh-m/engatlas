@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>IVF Animation</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --panel:#11182a;
+    --panel2:#0d1424;
+    --border:#26334a;
+    --text:#e9eef7;
+    --muted:#8d9ab0;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 50% -10%, rgba(73,95,146,.16), transparent 38%),
+      var(--bg);
+    color:var(--text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .wrap{
+    width:100%;
+    height:100%;
+    margin:0;
+  }
+
+  .card{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    background:linear-gradient(180deg, rgba(18,26,45,.96), rgba(13,20,35,.98));
+    border:1px solid var(--border);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 20px 70px rgba(0,0,0,.28);
+  }
+
+  .topbar{
+    display:flex;
+    gap:18px;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 16px;
+    border-bottom:1px solid var(--border);
+    background:rgba(10,16,29,.58);
+  }
+
+  .title{font-size:15px;font-weight:700;letter-spacing:.01em}
+  .subtitle{margin-top:3px;color:var(--muted);font-size:12px}
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-end;
+    gap:9px;
+  }
+
+  button{
+    border:1px solid #31405b;
+    border-radius:10px;
+    background:#151f34;
+    color:#e6edf7;
+    padding:8px 11px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  button:hover{background:#1b2943}
+  button.primary{
+    background:#20345b;
+    border-color:#3e5f9a;
+  }
+
+  .speedbox{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border:1px solid #31405b;
+    border-radius:10px;
+    padding:5px 9px;
+    background:#111a2c;
+    color:var(--muted);
+    font-size:11px;
+    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  input[type=range]{width:96px}
+  #speedValue{color:#dce7fa; min-width:30px}
+
+  .stagebar{
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    border-bottom:1px solid var(--border);
+    background:#0d1424;
+  }
+  .stage{
+    position:relative;
+    padding:10px 8px;
+    text-align:center;
+    color:#6f7d94;
+    font-size:11px;
+    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+    transition:.25s ease;
+  }
+  .stage + .stage{border-left:1px solid #1c2940}
+  .stage.active{
+    color:#f4f7fb;
+    background:linear-gradient(180deg, rgba(82,116,184,.17), rgba(82,116,184,.04));
+  }
+  .stage.active::after{
+    content:"";
+    position:absolute;
+    left:18%;
+    right:18%;
+    bottom:0;
+    height:2px;
+    background:#7aa2ff;
+    border-radius:2px;
+  }
+
+  .viz{
+    position:relative;
+    flex:1 1 auto;
+    min-height:0;
+  }
+
+  svg{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .status{
+    position:absolute;
+    left:16px;
+    bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    border:1px solid #2d3a54;
+    background:rgba(10,15,27,.84);
+    backdrop-filter:blur(8px);
+    border-radius:10px;
+    padding:7px 10px;
+    color:#9eabc0;
+    font:11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:#66748b;
+  }
+  .dot.running{background:#7aa2ff; box-shadow:0 0 10px rgba(122,162,255,.65)}
+  .dot.done{background:#67d391; box-shadow:0 0 10px rgba(103,211,145,.55)}
+
+  .footnote{
+    padding:10px 15px 13px;
+    border-top:1px solid var(--border);
+    color:#718096;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  @media (max-width:760px){
+    .topbar{align-items:flex-start; flex-direction:column}
+    .controls{justify-content:flex-start}
+    .stage{font-size:9px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="topbar">
+      <div>
+        <div class="title">IVF (Inverted File Index)</div>
+        <div class="subtitle">6 coarse clusters · find nearest centroids · probe a few clusters · search only inside them</div>
+      </div>
+
+      <div class="controls">
+        <button id="playBtn" class="primary">Pause</button>
+        <button id="restartBtn">Restart</button>
+        <button id="newRunBtn">New run</button>
+        <div class="speedbox">
+          speed
+          <input id="speed" type="range" min="0.5" max="2.5" step="0.25" value="1">
+          <span id="speedValue">1×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stagebar">
+      <div class="stage active">1 · BUILD 6 CLUSTERS</div>
+      <div class="stage">2 · QUERY ARRIVES</div>
+      <div class="stage">3 · SCORE CENTROIDS</div>
+      <div class="stage">4 · PROBE NPROBE LISTS</div>
+      <div class="stage">5 · RETURN TOP-K</div>
+    </div>
+
+    <div class="viz">
+      <svg id="svg" viewBox="0 0 1260 720" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <pattern id="smallGrid" width="28" height="28" patternUnits="userSpaceOnUse">
+            <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#152038" stroke-width="1"/>
+          </pattern>
+          <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4.5" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#99bdff"/>
+          </marker>
+          <marker id="arrowPink" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#f3a5d8"/>
+          </marker>
+          <marker id="arrowGold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#f8cf8f"/>
+          </marker>
+          <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#9be0b9"/>
+          </marker>
+          <marker id="arrowViolet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#c6a8ff"/>
+          </marker>
+          <marker id="arrowCyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0L10 5L0 10Z" fill="#8ddfeb"/>
+          </marker>
+        </defs>
+
+        <rect x="0" y="0" width="1260" height="720" fill="url(#smallGrid)" opacity=".68"/>
+
+        <g id="legend">
+          <rect x="980" y="26" width="242" height="122" rx="12" fill="#10192c" stroke="#2c3c58"/>
+          <text x="1000" y="50" fill="#b5c3d8" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">IVF SETTINGS</text>
+          <text x="1000" y="75" fill="#8796ae" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">nlist = 6</text>
+          <text x="1000" y="98" fill="#8796ae" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">nprobe = 2</text>
+          <text x="1000" y="121" fill="#8796ae" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">top-k = 3</text>
+        </g>
+
+        <g id="fieldLabel">
+          <text x="58" y="62" fill="#66758d" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">COARSE PARTITIONED VECTOR SPACE</text>
+          <line x1="58" y1="72" x2="950" y2="72" stroke="#22304a" stroke-width="1"/>
+        </g>
+
+        <g id="regions"></g>
+        <g id="probeHalos"></g>
+        <g id="distanceLines"></g>
+        <g id="searchLines"></g>
+        <g id="points"></g>
+        <g id="centroids"></g>
+        <g id="queryLayer"></g>
+        <g id="resultPanel"></g>
+      </svg>
+
+      <div class="status">
+        <span id="statusDot" class="dot running"></span>
+        <span id="statusText">initializing 6 IVF lists</span>
+      </div>
+    </div>
+
+    <div class="footnote">
+      This conceptual IVF animation shows the usual search flow: create a small number of coarse clusters (lists), compare a query only against the centroids,
+      select the closest <b>nprobe</b> lists, then search just those lists instead of scanning the full dataset.
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const regionsGroup = document.getElementById('regions');
+  const probeHalosGroup = document.getElementById('probeHalos');
+  const distanceLinesGroup = document.getElementById('distanceLines');
+  const searchLinesGroup = document.getElementById('searchLines');
+  const pointsGroup = document.getElementById('points');
+  const centroidsGroup = document.getElementById('centroids');
+  const queryLayer = document.getElementById('queryLayer');
+  const resultPanel = document.getElementById('resultPanel');
+
+  const playBtn = document.getElementById('playBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const newRunBtn = document.getElementById('newRunBtn');
+  const speed = document.getElementById('speed');
+  const speedValue = document.getElementById('speedValue');
+  const statusText = document.getElementById('statusText');
+  const statusDot = document.getElementById('statusDot');
+  const stages = [...document.querySelectorAll('.stage')];
+
+  const COLORS = [
+    {main:'#73a7ff', fill:'rgba(115,167,255,.08)', soft:'#99bdff', marker:'arrowBlue'},
+    {main:'#ef78c6', fill:'rgba(239,120,198,.08)', soft:'#f3a5d8', marker:'arrowPink'},
+    {main:'#f5b95f', fill:'rgba(245,185,95,.08)', soft:'#f8cf8f', marker:'arrowGold'},
+    {main:'#72d29b', fill:'rgba(114,210,155,.08)', soft:'#9be0b9', marker:'arrowGreen'},
+    {main:'#a98aff', fill:'rgba(169,138,255,.08)', soft:'#c6a8ff', marker:'arrowViolet'},
+    {main:'#63c9db', fill:'rgba(99,201,219,.08)', soft:'#8ddfeb', marker:'arrowCyan'},
+  ];
+
+  const K = 6;
+  const NPROBE = 2;
+  const TOPK = 3;
+
+  let playing = true;
+  let speedFactor = 1;
+  let timers = [];
+  let clusters = [];
+  let clusterEls = [];
+  let pointEls = [];
+  let centroidEls = [];
+  let query = null;
+  let queryEl = null;
+  let selectedProbeIds = [];
+  let topResults = [];
+
+  function clearTimers(){
+    timers.forEach(clearTimeout);
+    timers = [];
+  }
+
+  function later(fn, ms){
+    const id = setTimeout(() => {
+      if (playing) fn();
+      else later(fn, 120);
+    }, ms / speedFactor);
+    timers.push(id);
+    return id;
+  }
+
+  function setStage(idx, text){
+    stages.forEach((s,i)=>s.classList.toggle('active', i===idx));
+    statusText.textContent = text;
+    statusDot.className = 'dot running';
+  }
+
+  function rand(min,max){ return min + Math.random()*(max-min); }
+
+  function svgEl(tag, attrs={}){
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+    return el;
+  }
+
+  function blobPath(cx,cy,rx,ry,seed){
+    const pts = [];
+    const count = 12;
+    for(let i=0;i<count;i++){
+      const a = (Math.PI*2*i)/count;
+      const wobble = 1 + 0.10*Math.sin(seed*2.31 + i*1.71) + 0.05*Math.cos(seed*1.23 + i*2.13);
+      pts.push({
+        x:cx + Math.cos(a)*rx*wobble,
+        y:cy + Math.sin(a)*ry*wobble
+      });
+    }
+    let d = "";
+    for(let i=0;i<count;i++){
+      const p0 = pts[(i-1+count)%count];
+      const p1 = pts[i];
+      const p2 = pts[(i+1)%count];
+      const p3 = pts[(i+2)%count];
+      if(i===0) d += `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} `;
+      const c1x = p1.x + (p2.x-p0.x)/6;
+      const c1y = p1.y + (p2.y-p0.y)/6;
+      const c2x = p2.x - (p3.x-p1.x)/6;
+      const c2y = p2.y - (p3.y-p1.y)/6;
+      d += `C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)} `;
+    }
+    return d + "Z";
+  }
+
+  function buildClusters(){
+    regionsGroup.innerHTML = '';
+    probeHalosGroup.innerHTML = '';
+    distanceLinesGroup.innerHTML = '';
+    searchLinesGroup.innerHTML = '';
+    pointsGroup.innerHTML = '';
+    centroidsGroup.innerHTML = '';
+    queryLayer.innerHTML = '';
+    resultPanel.innerHTML = '';
+
+    clusters = [];
+    clusterEls = [];
+    pointEls = [];
+    centroidEls = [];
+    queryEl = null;
+    selectedProbeIds = [];
+    topResults = [];
+
+    const positions = [
+      {x:220,y:220}, {x:500,y:215}, {x:780,y:230},
+      {x:215,y:500}, {x:500,y:505}, {x:785,y:500}
+    ];
+
+    for(let i=0;i<K;i++){
+      const cx = positions[i].x + rand(-12,12);
+      const cy = positions[i].y + rand(-12,12);
+      const rx = rand(86,112);
+      const ry = rand(82,106);
+      const seed = rand(1,100);
+
+      const cluster = {
+        id: i,
+        cx, cy, rx, ry, seed,
+        points: [],
+      };
+
+      const pointCount = 10 + Math.floor(Math.random()*5);
+      for(let j=0;j<pointCount;j++){
+        const a = rand(0, Math.PI*2);
+        const r = Math.sqrt(Math.random()) * 0.78;
+        const px = cx + Math.cos(a)*rx*r + rand(-5,5);
+        const py = cy + Math.sin(a)*ry*r + rand(-5,5);
+        cluster.points.push({id:`c${i+1}v${j+1}`, x:px, y:py});
+      }
+
+      clusters.push(cluster);
+
+      const region = svgEl('path',{
+        d: blobPath(cx,cy,rx,ry,seed),
+        fill: COLORS[i].fill,
+        stroke: COLORS[i].main,
+        'stroke-width': 2,
+        'stroke-dasharray': '6 7',
+        opacity: 0
+      });
+      region.style.transition = 'opacity 450ms ease, d 700ms ease';
+      regionsGroup.appendChild(region);
+
+      const centroidG = svgEl('g',{transform:`translate(${cx} ${cy})`, opacity:0});
+      centroidG.style.transition = 'opacity 350ms ease, transform 700ms ease';
+      const halo = svgEl('circle',{cx:0,cy:0,r:18,fill:'none',stroke:COLORS[i].main,'stroke-width':1,opacity:.35});
+      const diamond = svgEl('rect',{x:-7,y:-7,width:14,height:14,rx:2,fill:'#10182a',stroke:COLORS[i].main,'stroke-width':2,transform:'rotate(45)'});
+      const txt = svgEl('text',{
+        x:0,y:-25,'text-anchor':'middle',
+        fill:COLORS[i].soft,'font-size':10,
+        'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace'
+      });
+      txt.textContent = `C${i+1}`;
+      centroidG.appendChild(halo);
+      centroidG.appendChild(diamond);
+      centroidG.appendChild(txt);
+      centroidsGroup.appendChild(centroidG);
+
+      clusterEls.push(region);
+      centroidEls.push(centroidG);
+
+      cluster.points.forEach((p) => {
+        const g = svgEl('g',{transform:`translate(${p.x} ${p.y})`, opacity:0});
+        g.style.transition = 'opacity 350ms ease';
+        const circle = svgEl('circle',{
+          cx:0,cy:0,r:4.4,
+          fill: COLORS[i].main,
+          stroke:'#0a0f1a','stroke-width':1.3,
+          opacity:.9
+        });
+        g.appendChild(circle);
+        pointsGroup.appendChild(g);
+        pointEls.push({g,circle,cluster:i,point:p});
+      });
+    }
+  }
+
+  function createQuery(){
+    const qx = rand(585, 720);
+    const qy = rand(338, 422);
+    query = {x:qx, y:qy};
+
+    const g = svgEl('g',{transform:`translate(${qx} ${qy})`, opacity:0});
+    g.style.transition = 'opacity 350ms ease';
+    const outer = svgEl('circle',{cx:0,cy:0,r:13,fill:'none',stroke:'#ffffff','stroke-width':1.7,opacity:.95, filter:'url(#softGlow)'});
+    const inner = svgEl('circle',{cx:0,cy:0,r:5.6,fill:'#ffffff',opacity:.92});
+    const txt = svgEl('text',{
+      x:0,y:-20,'text-anchor':'middle',
+      fill:'#dce6f8','font-size':10,
+      'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace'
+    });
+    txt.textContent = 'query';
+    g.appendChild(outer);
+    g.appendChild(inner);
+    g.appendChild(txt);
+    queryLayer.appendChild(g);
+    queryEl = g;
+  }
+
+  function dist(a,b){
+    const dx = a.x-b.x;
+    const dy = a.y-b.y;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+
+  function centroidDistances(){
+    return clusters.map((c, idx) => ({
+      clusterId: idx,
+      d: dist(query, {x:c.cx,y:c.cy})
+    })).sort((a,b)=>a.d-b.d);
+  }
+
+  function topPointsInSelected(){
+    const arr = [];
+    selectedProbeIds.forEach(id => {
+      clusters[id].points.forEach(p=>{
+        arr.push({
+          clusterId: id,
+          point: p,
+          d: dist(query, p)
+        });
+      });
+    });
+    return arr.sort((a,b)=>a.d-b.d).slice(0, TOPK);
+  }
+
+  function renderResultPanel(){
+    resultPanel.innerHTML = '';
+    const box = svgEl('g',{opacity:0});
+    box.style.transition = 'opacity 300ms ease';
+    const panel = svgEl('rect',{x:972,y:188,width:250,height:192,rx:12,fill:'#10192c',stroke:'#2c3c58'});
+    const title = svgEl('text',{x:992,y:214,fill:'#b5c3d8','font-size':11,'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace'});
+    title.textContent = 'RESULTS';
+    box.appendChild(panel);
+    box.appendChild(title);
+
+    const probeText = svgEl('text',{x:992,y:238,fill:'#8796ae','font-size':11,'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace'});
+    probeText.textContent = `probed lists: ${selectedProbeIds.map(i=>`C${i+1}`).join(', ')}`;
+    box.appendChild(probeText);
+
+    topResults.forEach((r, idx) => {
+      const y = 275 + idx*34;
+      const bullet = svgEl('circle',{cx:996,cy:y-4,r:4,fill:COLORS[r.clusterId].main});
+      const label = svgEl('text',{x:1010,y:y,fill:'#e8eef8','font-size':11,'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace'});
+      label.textContent = `#${idx+1}  ${r.point.id}  (from C${r.clusterId+1})`;
+      box.appendChild(bullet);
+      box.appendChild(label);
+    });
+
+    const note = svgEl('text',{x:992,y:355,fill:'#7f8da5','font-size':10,'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace'});
+    note.textContent = 'searched only vectors inside probed lists';
+    box.appendChild(note);
+
+    resultPanel.appendChild(box);
+    requestAnimationFrame(()=>box.setAttribute('opacity','1'));
+  }
+
+  function resetVisuals(){
+    clusterEls.forEach(el=>el.setAttribute('opacity','0'));
+    centroidEls.forEach(el=>el.setAttribute('opacity','0'));
+    pointEls.forEach(p=>p.g.setAttribute('opacity','0'));
+    if(queryEl) queryEl.setAttribute('opacity','0');
+    distanceLinesGroup.innerHTML = '';
+    searchLinesGroup.innerHTML = '';
+    probeHalosGroup.innerHTML = '';
+    resultPanel.innerHTML = '';
+  }
+
+  function startSequence(){
+    setStage(0, 'creating 6 coarse clusters / IVF lists');
+    clusterEls.forEach((el, i) => {
+      later(() => {
+        el.setAttribute('opacity','.92');
+        centroidEls[i].setAttribute('opacity','1');
+      }, i*140);
+    });
+    pointEls.forEach((p, i) => {
+      later(() => p.g.setAttribute('opacity','1'), 160 + i*16);
+    });
+
+    later(showQueryStep, 1550);
+  }
+
+  function showQueryStep(){
+    setStage(1, 'a query vector arrives');
+    if (!queryEl) createQuery();
+    queryEl.setAttribute('opacity','1');
+
+    clusterEls.forEach((el,i)=>{
+      el.setAttribute('opacity','.9');
+      el.setAttribute('stroke-dasharray','6 7');
+      centroidEls[i].setAttribute('opacity','1');
+    });
+    pointEls.forEach(p=>{
+      p.g.setAttribute('opacity','1');
+      p.circle.setAttribute('r','4.4');
+      p.circle.setAttribute('fill', COLORS[p.cluster].main);
+      p.circle.setAttribute('stroke', '#0a0f1a');
+      p.circle.setAttribute('stroke-width', '1.3');
+    });
+
+    later(scoreCentroidsStep, 1200);
+  }
+
+  function scoreCentroidsStep(){
+    setStage(2, 'compare the query only with 6 centroids');
+    distanceLinesGroup.innerHTML = '';
+
+    const dists = centroidDistances();
+    selectedProbeIds = dists.slice(0, NPROBE).map(x=>x.clusterId);
+
+    dists.forEach((item, rank) => {
+      const c = clusters[item.clusterId];
+      const line = svgEl('line',{
+        x1: query.x, y1: query.y,
+        x2: c.cx, y2: c.cy,
+        stroke: COLORS[item.clusterId].soft,
+        'stroke-width': rank < NPROBE ? 2.1 : 1.2,
+        'stroke-dasharray': rank < NPROBE ? '0' : '5 6',
+        'marker-end': `url(#${COLORS[item.clusterId].marker})`,
+        opacity: rank < NPROBE ? .96 : .4
+      });
+      distanceLinesGroup.appendChild(line);
+
+      const label = svgEl('text',{
+        x:(query.x+c.cx)/2 + 8, y:(query.y+c.cy)/2 - 5,
+        fill: rank < NPROBE ? COLORS[item.clusterId].soft : '#6e7c93',
+        'font-size':9,
+        'font-family':'ui-monospace, SFMono-Regular, Menlo, monospace',
+        opacity:.95
+      });
+      label.textContent = rank < NPROBE ? `rank ${rank+1}` : `${rank+1}`;
+      distanceLinesGroup.appendChild(label);
+    });
+
+    later(probeSelectedListsStep, 1500);
+  }
+
+  function probeSelectedListsStep(){
+    setStage(3, `probe only the nearest ${NPROBE} lists (nprobe = ${NPROBE})`);
+
+    probeHalosGroup.innerHTML = '';
+    searchLinesGroup.innerHTML = '';
+
+    clusterEls.forEach((el, i) => {
+      if (selectedProbeIds.includes(i)) {
+        el.setAttribute('opacity','1');
+        el.setAttribute('stroke-dasharray','0');
+      } else {
+        el.setAttribute('opacity','.28');
+      }
+    });
+
+    centroidEls.forEach((el, i) => {
+      el.setAttribute('opacity', selectedProbeIds.includes(i) ? '1' : '.28');
+    });
+
+    pointEls.forEach((p) => {
+      if (selectedProbeIds.includes(p.cluster)) {
+        p.g.setAttribute('opacity','1');
+      } else {
+        p.g.setAttribute('opacity','.18');
+      }
+    });
+
+    selectedProbeIds.forEach((id)=>{
+      const c = clusters[id];
+      const halo = svgEl('circle',{
+        cx:c.cx, cy:c.cy, r:30,
+        fill:'none', stroke:COLORS[id].main,
+        'stroke-width':2.4, opacity:.92,
+        filter:'url(#softGlow)'
+      });
+      probeHalosGroup.appendChild(halo);
+
+      clusters[id].points.forEach((p, idx) => {
+        if (idx > 5) return;
+        const line = svgEl('line',{
+          x1: query.x, y1: query.y,
+          x2: p.x, y2: p.y,
+          stroke: COLORS[id].soft,
+          'stroke-width':1.3,
+          'stroke-dasharray':'4 5',
+          opacity:.75
+        });
+        searchLinesGroup.appendChild(line);
+      });
+    });
+
+    later(returnTopKStep, 1650);
+  }
+
+  function returnTopKStep(){
+    setStage(4, `search selected lists and return top-${TOPK}`);
+    topResults = topPointsInSelected();
+
+    topResults.forEach((item) => {
+      const match = pointEls.find(p=>p.point.id === item.point.id);
+      if (match) {
+        match.circle.setAttribute('r','6.6');
+        match.circle.setAttribute('fill','#ffffff');
+        match.circle.setAttribute('stroke', COLORS[item.clusterId].main);
+        match.circle.setAttribute('stroke-width','2');
+      }
+
+      const line = svgEl('line',{
+        x1: query.x, y1: query.y,
+        x2: item.point.x, y2: item.point.y,
+        stroke: '#ffffff',
+        'stroke-width': 1.8,
+        'marker-end': `url(#${COLORS[item.clusterId].marker})`,
+        opacity: .95
+      });
+      searchLinesGroup.appendChild(line);
+    });
+
+    renderResultPanel();
+    statusDot.className = 'dot done';
+    statusText.textContent = `returned top-${TOPK} from only ${NPROBE} probed clusters`;
+
+    later(newRun, 3000);
+  }
+
+  function newRun(){
+    clearTimers();
+    buildClusters();
+    createQuery();
+    resetVisuals();
+    startSequence();
+  }
+
+  playBtn.addEventListener('click', ()=>{
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    statusDot.className = playing ? 'dot running' : 'dot';
+  });
+
+  restartBtn.addEventListener('click', ()=>{
+    clearTimers();
+    resetVisuals();
+    startSequence();
+  });
+
+  newRunBtn.addEventListener('click', ()=>{
+    newRun();
+  });
+
+  speed.addEventListener('input', ()=>{
+    speedFactor = parseFloat(speed.value);
+    speedValue.textContent = `${speedFactor % 1 === 0 ? speedFactor.toFixed(0) : speedFactor}×`;
+  });
+
+  newRun();
+})();
+</script>
+</body>
+</html>

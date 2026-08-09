@@ -1,0 +1,36 @@
+---
+title: Prefix Sum
+atlas_id: prefixsum
+description: A preprocessing technique for answering range-sum and cumulative-frequency queries efficiently.
+---
+
+# Prefix Sum
+
+A prefix sum stores the cumulative total of a sequence up to each position. After one linear preprocessing pass, it lets you find the sum of any section of an array in constant time, without any repetitve addition.
+
+# Cost
+It takes O(n) extra space. For a very large size of array this can be huge. Therefore effective only in situations where the number of range query is large and the array is fixed.
+
+### Pitfalls
+
+- Be consistent about whether ranges are inclusive or half-open. A leading zero makes `[left, right)` especially convenient.
+- Use a sufficiently wide numeric type when cumulative sums may exceed the range of individual elements.
+- Prefix sums work best for static data. If values change frequently, consider a Fenwick tree or segment tree instead.
+
+### Problem Patterns
+
+| Pattern | When to Use | Core Idea |
+|---|---|---|
+| Range Sum Query | Need sum of many subarrays/ranges | `sum(L, R) = prefix[R + 1] - prefix[L]` |
+| Subarray Sum = K | Find whether a subarray sums to `K` | Look for an earlier prefix equal to `currentPrefix - K` |
+| Count Subarrays with Sum = K | Count all subarrays whose sum is `K` | Store prefix-sum frequencies in a HashMap |
+| Longest Subarray with Sum = K | Find maximum-length subarray with sum `K` | Store the earliest index of each prefix sum |
+| Subarray Sum Divisible by K | Find/count subarrays divisible by `K` | Equal `prefixSum % K` values indicate a divisible subarray |
+| Equal Count of Two Values | Find subarray with equal occurrences of two values | Convert one value to `+1`, the other to `-1`, then find zero-sum subarrays |
+| Pivot / Equilibrium Index | Find index where left and right sums are equal | Compare prefix sum with `totalSum - prefixSum - nums[i]` |
+| Range Average Query | Need average of many ranges | Get range sum using prefix sum and divide by range length |
+| 2D Range Sum | Need sum of rectangular regions in a matrix | Use a 2D prefix-sum matrix |
+| Range Frequency Query | Count occurrences of values/characters in a range | Maintain prefix counts instead of prefix sums |
+| Difference Array | Perform many range updates efficiently | Mark changes at range boundaries, then take prefix sum |
+| Overlapping Intervals | Count how many intervals are active at each point | Add at interval start, subtract after interval end, then prefix sum |
+| Circular Array Range Sum | Handle ranges that wrap around the array | Combine prefix sums with the total array sum |

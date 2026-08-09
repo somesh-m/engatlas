@@ -4,6 +4,7 @@ import { usePluginData } from '@docusaurus/useGlobalData';
 import {
   Background,
   Controls,
+  PanOnScrollMode,
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
@@ -483,6 +484,9 @@ function AtlasCanvas() {
             fitViewOptions={{ padding: 0.18 }}
             minZoom={0.25}
             maxZoom={1.8}
+            panOnScroll
+            panOnScrollMode={PanOnScrollMode.Free}
+            zoomOnScroll={false}
             nodesDraggable={false}
             nodesConnectable={false}
             elementsSelectable

@@ -1,0 +1,105 @@
+---
+title: IVF (Inverted File Index)
+atlas_id: ivf
+description: An approximate nearest-neighbor index that partitions vectors into clusters and searches only the most promising partitions.
+---
+
+# IVF (Inverted File Index)
+
+An **Inverted File Index (IVF)** accelerates vector search by dividing the vector space into clusters. Instead of comparing a query with every stored vector, IVF searches only the clusters whose centroids are closest to the query.
+
+This makes IVF an **approximate nearest-neighbor (ANN)** technique: it trades some recall for lower latency and fewer distance calculations.
+
+---
+
+### Core Idea
+
+IVF uses K-means clustering algorithm to divide the space into clusters. It divides the vector space into nlist clusters, with each cluster represented by a centroid. A query vector is first compared against the centroids to find the nprobe nearest clusters. We then search the vectors contained within those selected clusters and rank them using the configured similarity or distance metric.
+
+A higher nlist produces smaller clusters, reducing the number of vectors that need to be scanned within each cluster. However, with a fixed nprobe, the query searches a smaller fraction of the overall vector space, which can reduce recall@k. A higher nlist can therefore be paired with a higher nprobe to improve recall while still avoiding a full scan. The selected clusters can also be searched independently, making the work compliant to parallelization across multiple cores.
+
+Finally, we combine the candidates from the selected clusters and return the top-k nearest vectors.
+
+```text
+Centroid A -> [vector 2, vector 8, vector 11, ...]
+Centroid B -> [vector 1, vector 6, vector 15, ...]
+Centroid C -> [vector 3, vector 4, vector 10, ...]
+```
+
+At query time:
+
+1. Compare the query vector with the cluster centroids.
+2. Select the nearest nprobe clusters.
+3. Search the vectors stored in those clusters.
+4. Rank the candidates and return the top-k nearest matches.
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/ivf-animation.html"
+    title="Interactive IVF search animation"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>
+
+---
+
+### Important Parameters
+
+| Parameter | Meaning | Tradeoff |
+|---|---|---|
+| `nlist` | Number of clusters in the index | More clusters create smaller candidate lists but increase training cost and centroid-search overhead. |
+| `nprobe` | Number of clusters searched per query | A higher value improves recall but increases latency and distance calculations. |
+| `k` | Number of nearest results requested | Larger result sets usually require more candidates to maintain good recall. |
+
+`nlist` is primarily an index-construction choice, while `nprobe` can usually be adjusted per query. This makes `nprobe` the main control for balancing latency against recall.
+
+---
+
+### Common Variants
+
+| Variant | Stored Data | Characteristics |
+|---|---|---|
+| **IVF-Flat** | Full vectors | Highest accuracy among common IVF variants, but uses more memory and performs exact comparisons within selected clusters. |
+| **IVF-SQ** | Scalar-quantized vectors | Reduces memory with modest decoding and accuracy costs. |
+| **IVF-PQ** | Product-quantized codes | Offers strong compression and faster approximate comparisons at the cost of additional recall loss. |
+
+IVF can also be combined with reranking: retrieve a larger approximate candidate set, then score those candidates using their original vectors or a more accurate model.
+
+---
+
+### Build and Search Cost
+
+| Operation | Main Cost |
+|---|---|
+| **Training** | Learning the coarse centroids from representative vectors. |
+| **Indexing** | Assigning every vector to its nearest centroid. |
+| **Querying** | Finding the nearest centroids and scanning the selected inverted lists. |
+| **Storage** | Centroids, list metadata, vector identifiers, and either full or compressed vectors. |
+
+The query cost depends on the number and size of the probed lists rather than only on the total number of indexed vectors.
+
+---
+
+### When to Use IVF
+
+IVF is a good fit when:
+
+- The dataset is large enough that brute-force search is too slow.
+- Search latency and memory usage need explicit tuning controls.
+- Vectors can be trained and indexed in batches.
+- Some loss of recall is acceptable, or approximate results can be reranked.
+
+A graph-based index such as HNSW may be a better fit when very high recall and low query latency matter more than index memory. Brute-force search is often simpler for small datasets or when exact results are required.
+
+---
+
+### Pitfalls
+
+- Training centroids on unrepresentative data produces poor partitions and lowers recall.
+- Setting `nprobe` too low can miss nearby vectors that fall across a cluster boundary.
+- Setting `nprobe` close to `nlist` approaches a full scan and removes much of IVF's speed advantage.
+- Highly uneven clusters create unpredictable latency because some inverted lists become much larger than others.
+- New or changing data distributions may require retraining the coarse quantizer.
+- Distance metrics and vector normalization must match the intended similarity measure.
+- Evaluate recall and latency using production-like queries; random benchmark vectors can hide poor clustering behavior.

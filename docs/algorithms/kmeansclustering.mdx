@@ -1,0 +1,124 @@
+---
+title: K-Means Clustering
+atlas_id: kmeansclustering
+description: An unsupervised learning algorithm that partitions observations into groups represented by their centroids.
+---
+
+# K-Means Clustering
+
+**K-means** is an unsupervised learning algorithm that partitions observations into `k` clusters. Each cluster is represented by its **centroid**, the mean of the points currently assigned to that cluster.
+
+The algorithm tries to keep points close to their assigned centroid. It works well when clusters are compact, roughly spherical, and separable under Euclidean distance.
+
+---
+
+### How It Works
+
+K-means alternates between assignment and update steps:
+
+1. Choose the number of clusters, `k`.
+2. Randomly select initial `k` centroids.
+3. Assign each point to its nearest centroid.
+4. Recalculate every centroid as the mean of its assigned points.
+5. Repeat the assignment and update steps until the assignments stop changing or the centroid movement becomes sufficiently small.
+
+
+Because assignment and centroid updates depend on each other, K-means generally needs multiple iterations to converge.
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/kmeans-clustering-animation.html"
+    title="Interactive K-means clustering animation"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>
+
+---
+
+### Objective Function
+
+K-means minimizes the **within-cluster sum of squared distances**, also called inertia:
+
+```text
+inertia = sum of squared_distance(point, assigned_centroid)
+```
+
+Each assignment step chooses the closest available centroid, and each update step places the centroid at the position that minimizes squared distance for its assigned points. The objective never increases during an iteration, so the algorithm eventually converges.
+
+Convergence does not guarantee the globally best clustering. Different initial centroids can produce different local optima.
+
+---
+
+### Choosing Initial Centroids
+
+Random initialization is simple but can create poor clusters or slow convergence. A common improvement is **K-means++**:
+
+1. Select the first centroid randomly.
+2. Measure each point's squared distance from its nearest selected centroid.
+3. Choose the next centroid with probability proportional to that squared distance.
+4. Repeat until `k` centroids have been selected.
+
+K-means++ spreads the initial centroids across the data and usually produces more stable results. Running the algorithm several times with different seeds and keeping the result with the lowest inertia further reduces initialization risk.
+
+---
+
+### Choosing `k`
+
+The number of clusters must normally be selected before training. Common methods include:
+
+| Method | Core Idea | Limitation |
+|---|---|---|
+| **Domain knowledge** | Choose a cluster count that is meaningful for the problem. | The expected groups may not match the data geometry. |
+| **Elbow method** | Plot inertia against `k` and look for the point where improvement begins to flatten. | The elbow is often ambiguous. |
+| **Silhouette score** | Compare cohesion within clusters with separation from neighboring clusters. | More expensive to calculate on large datasets. |
+| **Stability analysis** | Prefer values of `k` that produce similar clusters across samples or seeds. | Requires repeated clustering runs. |
+
+The best value of `k` depends on the intended use of the clusters, not only on a single metric.
+
+---
+
+### Complexity
+
+For `n` points, `k` clusters, `d` dimensions, and `i` iterations, the typical running time is:
+
+```text
+O(n * k * d * i)
+```
+
+The algorithm stores the dataset, cluster assignments, and `k` centroids. In practice, runtime is dominated by distance calculations during the assignment step.
+
+---
+
+### Common Variants
+
+| Variant | When It Helps |
+|---|---|
+| **K-means++** | Improves centroid initialization and reduces poor local solutions. |
+| **Mini-batch K-means** | Updates centroids using small samples, reducing training time and memory use for large datasets. |
+| **Spherical K-means** | Uses cosine similarity with normalized vectors, making it useful for directional data such as text embeddings. |
+| **Bisecting K-means** | Repeatedly splits clusters and can produce a hierarchical structure. |
+
+---
+
+### Common Uses
+
+- Segmenting customers or users by behavior.
+- Grouping similar documents, images, or embeddings.
+- Compressing colors in an image by replacing colors with cluster centroids.
+- Building coarse vector partitions for indexes such as IVF.
+- Discovering representative prototypes in a dataset.
+- Creating features or pseudo-labels for downstream models.
+
+---
+
+### Pitfalls
+
+- Scale numerical features before clustering; large-scale features otherwise dominate Euclidean distance.
+- Remove or control strong outliers because means are sensitive to extreme values.
+- Expect poor results for elongated, nested, differently sized, or differently dense clusters.
+- Run multiple initializations because a single run can converge to a poor local optimum.
+- Handle empty clusters by reinitializing their centroids or moving them to suitable points.
+- Do not interpret cluster numbers as an ordering; labels such as cluster `0` and cluster `1` are arbitrary.
+- High-dimensional distances can become less informative, so dimensionality reduction may help.
+- Evaluate whether the clusters are useful for the actual task rather than relying only on low inertia.

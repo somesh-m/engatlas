@@ -7,6 +7,23 @@ const config: Config = {
   tagline: 'A growing map of software engineering concepts and technologies',
   favicon: 'img/favicon.svg',
 
+  headTags: [
+    {
+      tagName: 'script',
+      attributes: {type: 'application/ld+json'},
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Engineering Atlas',
+        alternateName: 'Engineering Map',
+        url: 'https://engmap.dev/',
+        description:
+          'A visual map and learning library for software engineering concepts, technologies, and tradeoffs.',
+        inLanguage: 'en',
+      }),
+    },
+  ],
+
   url: 'https://engmap.dev',
   baseUrl: '/',
   organizationName: 'somesh-m',
@@ -44,6 +61,15 @@ const config: Config = {
   ],
 
   themeConfig: {
+    image: 'img/engineering-atlas-social.png',
+    metadata: [
+      {
+        name: 'keywords',
+        content:
+          'software engineering, system design, algorithms, databases, performance, engineering concepts',
+      },
+      {name: 'twitter:card', content: 'summary_large_image'},
+    ],
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,

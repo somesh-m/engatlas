@@ -15,7 +15,16 @@ children:
       - id: selection
         name: Selection
         type: category
-
+  - id: vectorsearch
+    name: Vector Search
+    type: category
+    children:
+      - id: hnsw
+        name: HNSW
+        type: concept
+      - id: ivf
+        name: IVF
+        type: concept
   - id: paradigms
     name: Algorithmic Paradigms
     type: category
@@ -52,7 +61,7 @@ children:
       - id: sliding-window
         name: Sliding Window
         type: category
-      - id: prefix-sum
+      - id: prefixsum
         name: Prefix Sum
         type: category
       - id: difference-array
@@ -244,3 +253,294 @@ children:
       - id: gossipalgo
         name: Gossip Protocols
         type: category
+  - id: machine-learning
+    name: Machine Learning
+    type: category
+    children:
+      - id: ml-fundamentals
+        name: Fundamentals
+        type: category
+        children:
+          - id: features
+            name: Features & Labels
+            type: concept
+          - id: training-validation-test
+            name: Train / Validation / Test Split
+            type: concept
+          - id: loss-functions
+            name: Loss Functions
+            type: concept
+          - id: optimizationml
+            name: Optimization
+            type: concept
+          - id: gradient-descent
+            name: Gradient Descent
+            type: concept
+          - id: overfitting-underfitting
+            name: Overfitting & Underfitting
+            type: concept
+          - id: bias-variance
+            name: Bias-Variance Tradeoff
+            type: concept
+          - id: regularization
+            name: Regularization
+            type: concept
+          - id: feature-engineering
+            name: Feature Engineering
+            type: concept
+          - id: dimensionality-reduction
+            name: Dimensionality Reduction
+            type: concept
+
+      - id: supervised-learning
+        name: Supervised Learning
+        type: category
+        children:
+
+          - id: regression
+            name: Regression
+            type: category
+            children:
+              - id: linear-regression
+                name: Linear Regression
+                type: concept
+              - id: polynomial-regression
+                name: Polynomial Regression
+                type: concept
+              - id: ridge-regression
+                name: Ridge Regression
+                type: concept
+              - id: lasso-regression
+                name: Lasso Regression
+                type: concept
+
+          - id: classification
+            name: Classification
+            type: category
+            children:
+              - id: logistic-regression
+                name: Logistic Regression
+                type: concept
+              - id: knn
+                name: K-Nearest Neighbors
+                type: concept
+              - id: naive-bayes
+                name: Naive Bayes
+                type: concept
+              - id: svm
+                name: Support Vector Machine
+                type: concept
+
+          - id: decision-trees
+            name: Decision Trees
+            type: category
+            children:
+              - id: decision-tree
+                name: Decision Tree
+                type: concept
+              - id: random-forest
+                name: Random Forest
+                type: concept
+              - id: gradient-boosting
+                name: Gradient Boosting
+                type: concept
+              - id: xgboost
+                name: XGBoost
+                type: concept
+
+      - id: unsupervised-learning
+        name: Unsupervised Learning
+        type: category
+        children:
+
+          - id: clustering
+            name: Clustering
+            type: category
+            children:
+              - id: kmeansclustering
+                name: K-Means
+                type: concept
+              - id: hierarchical-clustering
+                name: Hierarchical Clustering
+                type: concept
+              - id: dbscan
+                name: DBSCAN
+                type: concept
+              - id: gaussian-mixture-model
+                name: Gaussian Mixture Models
+                type: concept
+
+          - id: unsupervised-dimensionality-reduction
+            name: Dimensionality Reduction
+            type: category
+            children:
+              - id: pca
+                name: PCA
+                type: concept
+              - id: tsne
+                name: t-SNE
+                type: concept
+              - id: umap
+                name: UMAP
+                type: concept
+
+          - id: anomaly-detection
+            name: Anomaly Detection
+            type: category
+            children:
+              - id: isolation-forest
+                name: Isolation Forest
+                type: concept
+              - id: one-class-svm
+                name: One-Class SVM
+                type: concept
+
+      - id: semi-supervised-learning
+        name: Semi-Supervised Learning
+        type: category
+
+      - id: self-supervised-learning
+        name: Self-Supervised Learning
+        type: category
+        children:
+          - id: contrastive-learning
+            name: Contrastive Learning
+            type: concept
+          - id: masked-modeling
+            name: Masked Modeling
+            type: concept
+
+      - id: reinforcement-learning
+        name: Reinforcement Learning
+        type: category
+        children:
+          - id: rl-fundamentals
+            name: Agent, State, Action & Reward
+            type: concept
+          - id: markov-decision-process
+            name: Markov Decision Process
+            type: concept
+          - id: q-learning
+            name: Q-Learning
+            type: concept
+          - id: policy-gradient
+            name: Policy Gradient
+            type: concept
+          - id: actor-critic
+            name: Actor-Critic
+            type: concept
+
+      - id: neural-networks
+        name: Neural Networks
+        type: category
+        children:
+          - id: perceptron
+            name: Perceptron
+            type: concept
+          - id: multilayer-perceptron
+            name: Multilayer Perceptron
+            type: concept
+          - id: backpropagation
+            name: Backpropagation
+            type: concept
+          - id: activation-functions
+            name: Activation Functions
+            type: concept
+          - id: cnn
+            name: Convolutional Neural Networks
+            type: concept
+          - id: rnn
+            name: Recurrent Neural Networks
+            type: concept
+          - id: lstm
+            name: LSTM
+            type: concept
+          - id: transformer
+            name: Transformers
+            type: concept
+
+      - id: representation-learning
+        name: Representation Learning
+        type: category
+        children:
+          - id: embeddings
+            name: Embeddings
+            type: concept
+          - id: word-embeddings
+            name: Word Embeddings
+            type: concept
+          - id: sentence-embeddings
+            name: Sentence Embeddings
+            type: concept
+          - id: autoencoders
+            name: Autoencoders
+            type: concept
+
+      - id: model-evaluation
+        name: Model Evaluation
+        type: category
+        children:
+          - id: accuracy
+            name: Accuracy
+            type: concept
+          - id: precision-recall
+            name: Precision & Recall
+            type: concept
+          - id: f1-score
+            name: F1 Score
+            type: concept
+          - id: confusion-matrix
+            name: Confusion Matrix
+            type: concept
+          - id: roc-auc
+            name: ROC & AUC
+            type: concept
+          - id: cross-validation
+            name: Cross Validation
+            type: concept
+
+      - id: model-training
+        name: Model Training
+        type: category
+        children:
+          - id: batch-gradient-descent
+            name: Batch Gradient Descent
+            type: concept
+          - id: stochastic-gradient-descent
+            name: Stochastic Gradient Descent
+            type: concept
+          - id: mini-batch-training
+            name: Mini-Batch Training
+            type: concept
+          - id: hyperparameter-tuning
+            name: Hyperparameter Tuning
+            type: concept
+          - id: early-stopping
+            name: Early Stopping
+            type: concept
+
+      - id: ml-production
+        name: ML in Production
+        type: category
+        children:
+          - id: inference
+            name: Inference
+            type: concept
+          - id: model-serving
+            name: Model Serving
+            type: concept
+          - id: model-quantization
+            name: Quantization
+            type: concept
+          - id: model-distillation
+            name: Knowledge Distillation
+            type: concept
+          - id: model-monitoring
+            name: Model Monitoring
+            type: concept
+          - id: data-drift
+            name: Data Drift
+            type: concept
+          - id: model-drift
+            name: Model Drift
+            type: concept
