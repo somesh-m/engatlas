@@ -34,3 +34,16 @@ It takes O(n) extra space. For a very large size of array this can be huge. Ther
 | Difference Array | Perform many range updates efficiently | Mark changes at range boundaries, then take prefix sum |
 | Overlapping Intervals | Count how many intervals are active at each point | Add at interval start, subtract after interval end, then prefix sum |
 | Circular Array Range Sum | Handle ranges that wrap around the array | Combine prefix sums with the total array sum |
+
+### Interactive Visualization
+
+Use the controls below to step through prefix-array construction and see how two prefix values answer each range-sum query.
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/prefix-sum-animation.html"
+    title="Interactive prefix sum range query animation"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>

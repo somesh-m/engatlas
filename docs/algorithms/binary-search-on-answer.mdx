@@ -1,0 +1,191 @@
+---
+title: Binary Search on Answer
+atlas_id: binary-search-on-answer
+description: An optimization technique that searches a range of possible answers using a monotonic feasibility test.
+---
+
+# Binary Search on Answer
+
+**Binary search on answer** finds an optimal numeric value without constructing every possible solution. Instead of searching a sorted array, it searches an ordered range of candidate answers and asks whether each candidate is feasible.
+
+The technique works when feasibility is **monotonic**. For example, if a capacity of `x` is sufficient, then every capacity greater than `x` is also sufficient:
+
+```text
+candidate:   1  2  3  4  5  6  7
+feasible:    F  F  F  F  T  T  T
+                         ^
+                  first feasible answer
+```
+
+Binary search locates the boundary where the predicate changes, reducing a potentially large answer range to logarithmically many checks.
+
+---
+
+### Recognition Pattern
+
+Consider binary search on answer when a problem asks you to:
+
+- Minimize the largest value or maximize the smallest value.
+- Find the smallest capacity, speed, time, distance, or threshold that satisfies a constraint.
+- Optimize an integer answer whose possible bounds can be calculated.
+- Decide whether a proposed answer works more easily than directly computing the optimum.
+
+The key question is:
+
+> If a candidate value works, do all larger candidates work—or do all smaller candidates work?
+
+If neither direction is guaranteed, the feasibility predicate is not monotonic and ordinary binary search cannot safely discard half of the range.
+
+---
+
+### Core Steps
+
+1. Define the answer range `[low, high]` so it contains the optimum.
+2. Write a predicate `feasible(candidate)` that tests one candidate.
+3. Determine whether the goal is the first feasible or last feasible value.
+4. Use binary search to find that boundary.
+5. Return the boundary value, not merely the last midpoint tested.
+
+---
+
+### Minimum Feasible Template
+
+Use this form for problems such as minimum required capacity or minimum completion time:
+
+```ts
+function minimumFeasible(
+  low: number,
+  high: number,
+  feasible: (candidate: number) => boolean,
+): number {
+  while (low < high) {
+    const mid = low + Math.floor((high - low) / 2);
+
+    if (feasible(mid)) {
+      high = mid;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  return low;
+}
+```
+
+The invariant is that the minimum feasible answer remains inside `[low, high]`. When `low === high`, that one value is the answer.
+
+---
+
+### Maximum Feasible Template
+
+Use this form when maximizing a value, such as the largest minimum distance:
+
+```ts
+function maximumFeasible(
+  low: number,
+  high: number,
+  feasible: (candidate: number) => boolean,
+): number {
+  while (low < high) {
+    const mid = low + Math.floor((high - low + 1) / 2);
+
+    if (feasible(mid)) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return low;
+}
+```
+
+The upward-biased midpoint is important here. Without `+ 1`, a two-value range can repeatedly choose `low` and cause an infinite loop.
+
+---
+
+### Example: Minimum Shipping Capacity
+
+Suppose packages must be shipped in order within a fixed number of days. For a proposed ship capacity, a greedy scan can calculate how many days are required.
+
+```ts
+function shipWithinDays(weights: number[], maxDays: number): number {
+  let low = Math.max(...weights);
+  let high = weights.reduce((sum, weight) => sum + weight, 0);
+
+  const feasible = (capacity: number): boolean => {
+    let days = 1;
+    let load = 0;
+
+    for (const weight of weights) {
+      if (load + weight > capacity) {
+        days += 1;
+        load = 0;
+      }
+
+      load += weight;
+    }
+
+    return days <= maxDays;
+  };
+
+  while (low < high) {
+    const mid = low + Math.floor((high - low) / 2);
+
+    if (feasible(mid)) {
+      high = mid;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  return low;
+}
+```
+
+The heaviest package gives the lowest possible capacity. The sum of all package weights gives a safe upper bound because that capacity can ship everything in one day. Feasibility changes only once: an insufficient capacity may become sufficient as it increases, but a sufficient capacity never becomes insufficient.
+
+---
+
+### Common Problem Patterns
+
+| Goal | Candidate Answer | Typical Feasibility Check |
+|---|---|---|
+| Minimize maximum workload | Work assigned to one worker | Greedily count how many workers are needed. |
+| Minimum processing speed | Items processed per unit time | Sum the time required at that speed. |
+| Minimum completion time | Available time | Count how much work can finish by that time. |
+| Maximize minimum distance | Distance between placements | Greedily place items while maintaining the distance. |
+| Minimum allowed threshold | Error, cost, or limit | Check whether a valid configuration exists under the threshold. |
+| Maximum achievable value | Score, height, or allocation | Check whether the target value can be reached with available resources. |
+
+---
+
+### Complexity
+
+If the answer range has width `R` and one feasibility check costs `C`, the total time is:
+
+```text
+O(C * log R)
+```
+
+For a linear feasibility scan over `n` inputs, this is usually `O(n log R)`. Extra space depends on the predicate and is often `O(1)`.
+
+For real-valued answers, binary search usually runs for a fixed number of iterations or until the interval is smaller than an error tolerance. In that case, the iteration count depends on the required precision.
+
+---
+
+### Pitfalls
+
+- Prove monotonicity before using binary search; examples alone are not sufficient.
+- Choose bounds that definitely contain the answer. Tight bounds improve performance but correctness comes first.
+- Match the loop and midpoint bias to the boundary being searched.
+- Keep the feasibility check consistent: avoid hidden state that changes between calls.
+- Watch for numeric overflow when calculating the midpoint, totals, products, or upper bounds.
+- Do not return early on the first feasible midpoint; it may not be the optimal boundary.
+- For floating-point answers, use an appropriate tolerance and clearly define rounding behavior.
+
+---
+
+### Binary Search on Answer vs. Regular Binary Search
+
+Regular binary search looks for a value or boundary in explicitly sorted data. Binary search on answer searches an implicit range of possible results. The range itself need not be stored; only the monotonic feasibility predicate is required.

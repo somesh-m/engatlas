@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prefix Sum — Range Query Animation (Inclusive Prefix)</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg:#0a0d13;
+    --panel:#111826;
+    --panel2:#0d131d;
+    --border:#273247;
+    --text:#eef3f8;
+    --muted:#8795a8;
+    --blue:#60a5fa;
+    --pink:#f472b6;
+    --amber:#f59e0b;
+    --green:#34d399;
+    --red:#ef4444;
+    --purple:#a78bfa;
+  }
+
+  body {
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 40px;
+  }
+
+  .wrap { width:min(1080px, 100%); }
+  h1 {
+    margin:0 0 6px;
+    font-size:clamp(1.55rem, 3vw, 2.15rem);
+    letter-spacing:-.03em;
+  }
+  .sub {
+    margin:0 0 16px;
+    color:var(--muted);
+    font-size:.95rem;
+  }
+  .sub strong { color:#fff; }
+
+  .card {
+    background:#0f151f;
+    border:1px solid var(--border);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 28px 80px rgba(0,0,0,.35);
+  }
+
+  .controls {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+    background:#111925;
+  }
+
+  button {
+    border:1px solid #344158;
+    background:#1a2432;
+    color:#dce5f0;
+    border-radius:9px;
+    padding:8px 13px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  button:hover { background:#222f40; }
+  button.primary {
+    background:#223b72;
+    border-color:#365a9e;
+    color:#c9d8ff;
+  }
+  .spacer { flex:1; }
+  .readout {
+    font:800 .76rem ui-monospace, monospace;
+    color:#95a2b5;
+  }
+  .readout b { color:#fff; }
+
+  .stage {
+    position:relative;
+    min-height:515px;
+    padding:72px 28px 28px;
+    background:
+      radial-gradient(circle at 24% 38%, rgba(96,165,250,.07), transparent 28%),
+      radial-gradient(circle at 76% 64%, rgba(167,139,250,.06), transparent 28%),
+      #080c12;
+    overflow:hidden;
+  }
+
+  .banner {
+    position:absolute;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    padding:10px 18px;
+    border-radius:999px;
+    border:1px solid #33445c;
+    background:#121b27;
+    color:#e4ecf5;
+    font:900 .82rem ui-monospace, monospace;
+    letter-spacing:.02em;
+    white-space:nowrap;
+    box-shadow:0 8px 25px rgba(0,0,0,.24);
+  }
+  .banner.blue { border-color:#315b85; background:#101c2a; color:#b9dcff; }
+  .banner.amber { border-color:#86621c; background:#21190a; color:#ffd98a; }
+  .banner.green { border-color:#276348; background:#0f2018; color:#96ecc6; }
+  .banner.purple { border-color:#5b4b8b; background:#19152a; color:#d3c7ff; }
+
+  .content {
+    display:grid;
+    grid-template-columns:minmax(0, 1.4fr) minmax(260px, .8fr);
+    gap:24px;
+    align-items:stretch;
+  }
+
+  .panel {
+    background:#101722;
+    border:1px solid #253248;
+    border-radius:16px;
+    padding:18px;
+    min-width:0;
+  }
+
+  .panel-title {
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.11em;
+    color:#718096;
+    font-weight:900;
+    margin-bottom:14px;
+  }
+
+  .row-label {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:2px 0 7px;
+    color:#9eabc0;
+    font:800 .72rem ui-monospace, monospace;
+  }
+
+  .array-row {
+    display:grid;
+    grid-template-columns:repeat(6, minmax(48px, 1fr));
+    gap:8px;
+    position:relative;
+  }
+  .prefix-row {
+    display:grid;
+    grid-template-columns:repeat(6, minmax(42px, 1fr));
+    gap:7px;
+  }
+
+  .index-row {
+    display:grid;
+    grid-template-columns:repeat(6, minmax(48px, 1fr));
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .prefix-index-row {
+    display:grid;
+    grid-template-columns:repeat(6, minmax(42px, 1fr));
+    gap:7px;
+    margin-top:5px;
+  }
+
+  .idx {
+    text-align:center;
+    color:#5f6d82;
+    font:800 .63rem ui-monospace, monospace;
+  }
+
+  .cell {
+    min-height:59px;
+    border-radius:11px;
+    border:1px solid #334158;
+    background:#151e2a;
+    display:grid;
+    place-items:center;
+    position:relative;
+    overflow:hidden;
+    font:900 1.12rem ui-monospace, monospace;
+    color:#dce6f2;
+    transition:.25s ease;
+  }
+  .cell::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    opacity:0;
+    transition:.25s;
+  }
+
+  .array-cell.query {
+    border-color:#4b78a8;
+    background:#14263a;
+    color:#b7dcff;
+    box-shadow:0 0 0 1px rgba(96,165,250,.28), 0 0 20px rgba(96,165,250,.12);
+    transform:translateY(-2px);
+  }
+  .array-cell.dim {
+    opacity:.28;
+    filter:saturate(.6);
+    transform:scale(.96);
+  }
+  .array-cell.answer {
+    border-color:#2f7658;
+    background:#10231a;
+    color:#9af0c9;
+    box-shadow:0 0 0 1px rgba(52,211,153,.25), 0 0 20px rgba(52,211,153,.13);
+  }
+
+  .prefix-cell {
+    min-height:53px;
+    color:#cfc6ff;
+    border-color:#453d66;
+    background:#181525;
+  }
+  .prefix-cell.hidden-value {
+    color:transparent;
+    background:#121820;
+    border-color:#2a3444;
+  }
+  .prefix-cell.build {
+    animation:prefixBuild .62s ease;
+    border-color:#6858a6;
+    background:#201a35;
+    color:#ddd5ff;
+    box-shadow:0 0 22px rgba(167,139,250,.16);
+  }
+  .prefix-cell.pick-right {
+    border-color:#9a6d20;
+    background:#211907;
+    color:#ffd98a;
+    box-shadow:0 0 0 2px rgba(245,158,11,.26), 0 0 24px rgba(245,158,11,.16);
+    transform:translateY(-3px);
+  }
+  .prefix-cell.pick-left {
+    border-color:#2d6e91;
+    background:#10202c;
+    color:#b8e3ff;
+    box-shadow:0 0 0 2px rgba(96,165,250,.24), 0 0 24px rgba(96,165,250,.14);
+    transform:translateY(-3px);
+  }
+
+  .arrow-zone {
+    height:44px;
+    position:relative;
+    margin:7px 0 4px;
+  }
+  .down-arrow {
+    position:absolute;
+    left:50%;
+    top:3px;
+    width:2px;
+    height:28px;
+    background:#38465b;
+    transform:translateX(-50%);
+  }
+  .down-arrow::after {
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:-2px;
+    transform:translateX(-50%);
+    border-left:7px solid transparent;
+    border-right:7px solid transparent;
+    border-top:9px solid #52627a;
+  }
+  .down-arrow.active {
+    background:var(--purple);
+    box-shadow:0 0 14px rgba(167,139,250,.28);
+  }
+  .down-arrow.active::after { border-top-color:var(--purple); }
+
+  .query-strip {
+    margin-top:15px;
+    min-height:64px;
+    border-radius:12px;
+    border:1px solid #2b394e;
+    background:#0b111a;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:12px;
+    color:#aeb9ca;
+    font:800 .8rem ui-monospace, monospace;
+    transition:.25s;
+  }
+  .query-strip strong { color:#fff; }
+  .query-strip.active {
+    border-color:#355f88;
+    background:#0f1d2b;
+    box-shadow:0 0 22px rgba(96,165,250,.10);
+  }
+
+  .formula-card {
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .problem {
+    border:1px solid #2d3a4f;
+    background:#0b111a;
+    border-radius:13px;
+    padding:14px;
+  }
+  .problem .kicker {
+    color:#68788f;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    font-size:.65rem;
+    font-weight:900;
+    margin-bottom:7px;
+  }
+  .problem .text {
+    font-weight:800;
+    line-height:1.45;
+    color:#d8e1eb;
+  }
+  .range-pill {
+    display:inline-block;
+    margin-top:9px;
+    padding:6px 9px;
+    border-radius:999px;
+    background:#16283b;
+    border:1px solid #345f87;
+    color:#b4dcff;
+    font:900 .78rem ui-monospace, monospace;
+  }
+
+  .equation {
+    flex:1;
+    min-height:180px;
+    border:1px solid #3d355b;
+    background:#151220;
+    border-radius:14px;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    transition:.25s;
+  }
+  .eq-main {
+    font:900 clamp(1rem, 2.7vw, 1.42rem) ui-monospace, monospace;
+    color:#e5e0ff;
+    line-height:1.5;
+  }
+  .eq-main .r { color:#ffd98a; }
+  .eq-main .l { color:#b8e3ff; }
+  .eq-main .ans { color:#91edc2; }
+  .eq-note {
+    margin-top:11px;
+    color:#7f8ba0;
+    font-size:.76rem;
+    line-height:1.4;
+  }
+  .equation.flash { animation:eqFlash .72s ease; }
+  .equation.success {
+    border-color:#2f6e53;
+    background:#102019;
+    box-shadow:0 0 28px rgba(52,211,153,.10);
+  }
+
+  .complexity {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+  }
+  .complexity > div {
+    border-radius:10px;
+    border:1px solid #263246;
+    background:#0c121b;
+    padding:10px;
+    text-align:center;
+    color:#7f8da2;
+    font-size:.72rem;
+  }
+  .complexity b {
+    display:block;
+    margin-top:3px;
+    color:#dbe4ef;
+    font:900 .9rem ui-monospace, monospace;
+  }
+  .complexity .good {
+    border-color:#2a5f49;
+    background:#0d1914;
+  }
+  .complexity .good b { color:#8ee9be; }
+
+  .legend {
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:8px;
+    padding:13px 14px 15px;
+    border-top:1px solid var(--border);
+    background:#101722;
+  }
+  .legend-item {
+    font-size:.72rem;
+    color:#8795a9;
+    text-align:center;
+    padding:8px;
+    border-radius:8px;
+    background:#0d141e;
+    border:1px solid #202c3d;
+  }
+  .legend-item b {
+    display:block;
+    color:#dce6f2;
+    margin-bottom:2px;
+  }
+
+  @keyframes prefixBuild {
+    0% { transform:translateY(8px) scale(.88); opacity:.2; }
+    55% { transform:translateY(-3px) scale(1.06); opacity:1; }
+    100% { transform:none; }
+  }
+  @keyframes eqFlash {
+    0%,100% { transform:scale(1); }
+    45% { transform:scale(1.025); box-shadow:0 0 0 2px rgba(167,139,250,.28), 0 0 30px rgba(167,139,250,.12); }
+  }
+
+  @media (max-width: 820px) {
+    .content { grid-template-columns:1fr; }
+    .stage { padding:76px 16px 22px; }
+    .legend { grid-template-columns:1fr 1fr; }
+    .legend-item:last-child { grid-column:1 / -1; }
+    .banner { white-space:normal; text-align:center; width:min(92%, 620px); }
+  }
+
+  @media (max-width: 540px) {
+    .cell { min-height:50px; font-size:.95rem; }
+    .prefix-cell { min-height:46px; }
+    .array-row, .index-row { gap:5px; }
+    .prefix-row, .prefix-index-row { gap:4px; }
+    .panel { padding:13px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Prefix Sum</h1>
+  <p class="sub">Solve repeated <strong>range-sum queries</strong> by preprocessing once, then subtracting two prefix values.</p>
+
+  <div class="card">
+    <div class="controls">
+      <button class="primary" id="playBtn">▶ Play</button>
+      <button id="stepBtn">Step</button>
+      <button id="resetBtn">Reset</button>
+      <div class="spacer"></div>
+      <div class="readout">Query: <b id="queryNo">1</b>/3 · Step: <b id="stepNo">0</b>/5</div>
+    </div>
+
+    <div class="stage">
+      <div class="banner" id="banner">Press Play</div>
+
+      <div class="content">
+        <div class="panel">
+          <div class="panel-title">Array → Prefix Array</div>
+
+          <div class="row-label"><span>Original array</span><span id="rangeLabel">L = 2, R = 4</span></div>
+          <div class="index-row" id="arrayIndexes"></div>
+          <div class="array-row" id="arrayRow"></div>
+
+          <div class="arrow-zone"><div class="down-arrow" id="downArrow"></div></div>
+
+          <div class="row-label"><span>Prefix sum</span><span>prefix[0] = 0</span></div>
+          <div class="prefix-row" id="prefixRow"></div>
+          <div class="prefix-index-row" id="prefixIndexes"></div>
+
+          <div class="query-strip" id="queryStrip">
+            <span>Range query:</span>
+            <strong id="queryText">sum(2, 4)</strong>
+          </div>
+        </div>
+
+        <div class="panel formula-card">
+          <div class="problem">
+            <div class="kicker">Problem</div>
+            <div class="text">Find the sum of values between indices <strong>L</strong> and <strong>R</strong>.</div>
+            <div class="range-pill" id="rangePill">L = 2 · R = 4</div>
+          </div>
+
+          <div class="equation" id="equation">
+            <div class="eq-main" id="eqMain">prefix[R + 1] − prefix[L]</div>
+            <div class="eq-note" id="eqNote">Build the prefix array first.</div>
+          </div>
+
+          <div class="complexity">
+            <div>Direct range scan<b>O(n)</b></div>
+            <div class="good">Prefix query<b>O(1)</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><b>1 · Build</b>Precompute prefix sums</div>
+      <div class="legend-item"><b>2 · Select</b>Highlight [L, R]</div>
+      <div class="legend-item"><b>3 · Right</b>Take prefix[R + 1]</div>
+      <div class="legend-item"><b>4 · Remove</b>Subtract prefix[L]</div>
+      <div class="legend-item"><b>5 · Answer</b>Range sum in O(1)</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const values = [3, 1, 4, 2, 5, 1];
+const prefix = [];
+for (let i = 0; i < values.length; i++) {
+  prefix.push(i === 0 ? values[i] : prefix[i - 1] + values[i]);
+}
+
+const queries = [
+  { l: 2, r: 4 },
+  { l: 1, r: 3 },
+  { l: 3, r: 5 }
+];
+
+const playBtn = $('playBtn');
+const stepBtn = $('stepBtn');
+const resetBtn = $('resetBtn');
+const banner = $('banner');
+const arrayRow = $('arrayRow');
+const arrayIndexes = $('arrayIndexes');
+const prefixRow = $('prefixRow');
+const prefixIndexes = $('prefixIndexes');
+const queryText = $('queryText');
+const queryStrip = $('queryStrip');
+const rangeLabel = $('rangeLabel');
+const rangePill = $('rangePill');
+const equation = $('equation');
+const eqMain = $('eqMain');
+const eqNote = $('eqNote');
+const stepNo = $('stepNo');
+const queryNo = $('queryNo');
+const downArrow = $('downArrow');
+
+let step = 0;
+let queryIndex = 0;
+let playing = false;
+let timer = null;
+let prefixBuilt = false;
+let buildTimers = [];
+
+function makeCells() {
+  arrayRow.innerHTML = '';
+  arrayIndexes.innerHTML = '';
+  prefixRow.innerHTML = '';
+  prefixIndexes.innerHTML = '';
+
+  values.forEach((value, i) => {
+    const idx = document.createElement('div');
+    idx.className = 'idx';
+    idx.textContent = i;
+    arrayIndexes.appendChild(idx);
+
+    const cell = document.createElement('div');
+    cell.className = 'cell array-cell';
+    cell.id = `a${i}`;
+    cell.textContent = value;
+    arrayRow.appendChild(cell);
+  });
+
+  prefix.forEach((value, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell prefix-cell hidden-value';
+    cell.id = `p${i}`;
+    cell.textContent = value;
+    prefixRow.appendChild(cell);
+
+    const idx = document.createElement('div');
+    idx.className = 'idx';
+    idx.textContent = i;
+    prefixIndexes.appendChild(idx);
+  });
+}
+
+function currentQuery() {
+  return queries[queryIndex];
+}
+
+function answerFor(q) {
+  return prefix[q.r] - (q.l > 0 ? prefix[q.l - 1] : 0);
+}
+
+function setBanner(text, kind='') {
+  banner.textContent = text;
+  banner.className = 'banner' + (kind ? ' ' + kind : '');
+}
+
+function clearBuildTimers() {
+  buildTimers.forEach(clearTimeout);
+  buildTimers = [];
+}
+
+function clearFx(keepPrefix=true) {
+  clearBuildTimers();
+  document.querySelectorAll('.array-cell').forEach(el => {
+    el.classList.remove('query', 'dim', 'answer');
+  });
+  document.querySelectorAll('.prefix-cell').forEach(el => {
+    el.classList.remove('build', 'pick-right', 'pick-left');
+    if (!keepPrefix || !prefixBuilt) el.classList.add('hidden-value');
+    else el.classList.remove('hidden-value');
+  });
+  queryStrip.classList.remove('active');
+  equation.classList.remove('flash', 'success');
+  downArrow.classList.remove('active');
+}
+
+function setQueryUI() {
+  const q = currentQuery();
+  queryNo.textContent = String(queryIndex + 1);
+  rangeLabel.textContent = `L = ${q.l}, R = ${q.r}`;
+  rangePill.textContent = `L = ${q.l} · R = ${q.r}`;
+  queryText.textContent = `sum(${q.l}, ${q.r})`;
+}
+
+function buildPrefixAnimated() {
+  prefixBuilt = false;
+  document.querySelectorAll('.prefix-cell').forEach(el => el.classList.add('hidden-value'));
+  downArrow.classList.add('active');
+
+  prefix.forEach((value, i) => {
+    const t = setTimeout(() => {
+      const cell = $(`p${i}`);
+      cell.classList.remove('hidden-value');
+      cell.classList.add('build');
+      setTimeout(() => cell.classList.remove('build'), 560);
+      if (i === prefix.length - 1) {
+        prefixBuilt = true;
+        downArrow.classList.remove('active');
+      }
+    }, i * 120);
+    buildTimers.push(t);
+  });
+}
+
+function phase1() {
+  clearFx(false);
+  stepNo.textContent = '1';
+  setQueryUI();
+  setBanner('Build the prefix array once', 'purple');
+  eqMain.innerHTML = 'prefix[i] = a[i] + prefix[i - 1]';
+  eqNote.textContent = 'Each cell stores the cumulative sum up to that index.';
+  equation.classList.add('flash');
+  buildPrefixAnimated();
+}
+
+function ensurePrefixVisible() {
+  clearBuildTimers();
+  prefixBuilt = true;
+  document.querySelectorAll('.prefix-cell').forEach(el => el.classList.remove('hidden-value', 'build'));
+  downArrow.classList.remove('active');
+}
+
+function phase2() {
+  clearFx(true);
+  ensurePrefixVisible();
+  stepNo.textContent = '2';
+  const q = currentQuery();
+  for (let i = q.l; i <= q.r; i++) $(`a${i}`).classList.add('query');
+  queryStrip.classList.add('active');
+  setBanner(`Select the range [${q.l}, ${q.r}]`, 'blue');
+  eqMain.innerHTML = `sum(${q.l}, ${q.r}) = ?`;
+  eqNote.textContent = 'We want this contiguous slice of the array.';
+}
+
+function phase3() {
+  clearFx(true);
+  ensurePrefixVisible();
+  stepNo.textContent = '3';
+  const q = currentQuery();
+  for (let i = q.l; i <= q.r; i++) $(`a${i}`).classList.add('query');
+  $(`p${q.r}`).classList.add('pick-right');
+  setBanner(`Take prefix[R] = prefix[${q.r}]`, 'amber');
+  eqMain.innerHTML = `<span class="r">prefix[${q.r}] = ${prefix[q.r]}</span>`;
+  eqNote.textContent = `This includes everything from index 0 through ${q.r}.`;
+  equation.classList.add('flash');
+}
+
+function phase4() {
+  clearFx(true);
+  ensurePrefixVisible();
+  stepNo.textContent = '4';
+  const q = currentQuery();
+
+  for (let i = 0; i < q.l; i++) $(`a${i}`).classList.add('dim');
+  for (let i = q.l; i <= q.r; i++) $(`a${i}`).classList.add('query');
+
+  $(`p${q.r}`).classList.add('pick-right');
+  if (q.l > 0) $(`p${q.l - 1}`).classList.add('pick-left');
+
+  setBanner(q.l > 0 ? `Subtract prefix[L - 1] = prefix[${q.l - 1}]` : 'L = 0, so subtract 0', 'blue');
+  eqMain.innerHTML = q.l > 0
+    ? `<span class="r">${prefix[q.r]}</span> − <span class="l">${prefix[q.l - 1]}</span>`
+    : `<span class="r">${prefix[q.r]}</span> − <span class="l">0</span>`;
+  eqNote.textContent = q.l > 0
+    ? `Subtracting the sum up to index ${q.l - 1} removes everything before L.`
+    : 'Since L = 0, the range already starts from the beginning.';
+  equation.classList.add('flash');
+}
+
+function phase5() {
+  clearFx(true);
+  ensurePrefixVisible();
+  stepNo.textContent = '5';
+  const q = currentQuery();
+  const answer = answerFor(q);
+
+  for (let i = 0; i < q.l; i++) $(`a${i}`).classList.add('dim');
+  for (let i = q.l; i <= q.r; i++) $(`a${i}`).classList.add('answer');
+  $(`p${q.r}`).classList.add('pick-right');
+  if (q.l > 0) $(`p${q.l - 1}`).classList.add('pick-left');
+
+  setBanner(`Answer = ${answer}`, 'green');
+  eqMain.innerHTML = q.l > 0
+    ? `<span class="r">${prefix[q.r]}</span> − <span class="l">${prefix[q.l - 1]}</span> = <span class="ans">${answer}</span>`
+    : `<span class="r">${prefix[q.r]}</span> − <span class="l">0</span> = <span class="ans">${answer}</span>`;
+  eqNote.textContent = `The range query itself is now O(1).`;
+  equation.classList.add('success');
+
+  const t = setTimeout(() => {
+    queryIndex = (queryIndex + 1) % queries.length;
+    setQueryUI();
+  }, 1100);
+  buildTimers.push(t);
+}
+
+function nextStep() {
+  step = (step % 5) + 1;
+  if (step === 1) phase1();
+  else if (step === 2) phase2();
+  else if (step === 3) phase3();
+  else if (step === 4) phase4();
+  else phase5();
+}
+
+function start() {
+  playing = true;
+  playBtn.textContent = '❚❚ Pause';
+  nextStep();
+  timer = setInterval(nextStep, 1850);
+}
+
+function stop() {
+  playing = false;
+  playBtn.textContent = '▶ Play';
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function reset() {
+  stop();
+  clearBuildTimers();
+  step = 0;
+  queryIndex = 0;
+  prefixBuilt = false;
+  stepNo.textContent = '0';
+  makeCells();
+  setQueryUI();
+  clearFx(false);
+  setBanner('Press Play');
+  eqMain.innerHTML = 'prefix[R] − prefix[L - 1]';
+  eqNote.textContent = 'Build the inclusive prefix array first.';
+}
+
+playBtn.addEventListener('click', () => playing ? stop() : start());
+stepBtn.addEventListener('click', () => {
+  stop();
+  nextStep();
+});
+resetBtn.addEventListener('click', reset);
+
+reset();
+</script>
+</body>
+</html>

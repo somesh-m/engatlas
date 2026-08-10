@@ -1,0 +1,118 @@
+id: software-design-patterns
+name: Software Design Patterns
+type: category
+children:
+
+  - id: applicationarchitecture
+    name: Application Architecture
+    type: category
+    children:
+
+      - id: monolithic
+        name: Monolithic Architecture
+        type: concept
+
+      - id: modularmonolith
+        name: Modular Monolith
+        type: concept
+
+      - id: layeredarchitecture
+        name: Layered / N-Tier Architecture
+        type: concept
+
+      - id: hexagonalarchitecture
+        name: Hexagonal Architecture
+        type: concept
+
+      - id: cleanarchitecture
+        name: Clean Architecture
+        type: concept
+
+      - id: onionarchitecture
+        name: Onion Architecture
+        type: concept
+
+      - id: microkernel
+        name: Microkernel / Plugin Architecture
+        type: concept
+
+
+  - id: distributedarchitecture
+    name: Distributed Architecture
+    type: category
+    children:
+
+      - id: clientserver
+        name: Client-Server Architecture
+        type: concept
+
+      - id: microservices
+        name: Microservices
+        type: concept
+
+      - id: soa
+        name: Service-Oriented Architecture
+        type: concept
+
+      - id: peertopeer
+        name: Peer-to-Peer Architecture
+        type: concept
+
+      - id: serverless
+        name: Serverless Architecture
+        type: concept
+
+      - id: spacebased
+        name: Space-Based Architecture
+        type: concept
+
+  - id: dataandstatearchitecture
+    name: Data & State Architecture
+    type: category
+    children:
+
+      - id: cqrs
+        name: CQRS
+        type: concept
+
+      - id: eventsourcing
+        name: Event Sourcing
+        type: concept
+
+      - id: sharednothing
+        name: Shared-Nothing Architecture
+        type: concept
+
+      - id: sharedmemory
+        name: Shared-Memory Architecture
+        type: concept
+
+      - id: blackboard
+        name: Blackboard Architecture
+        type: concept
+
+
+  - id: processingarchitecture
+    name: Processing Architecture
+    type: category
+    children:
+
+      - id: pipeandfilter
+        name: Pipe-and-Filter
+        type: concept
+
+      - id: dataflow
+        name: Dataflow Architecture
+        type: concept
+
+      - id: streamprocessing
+        name: Stream Processing
+        type: concept
+
+      - id: masterworker
+        name: Master-Worker
+        type: concept
+
+      - id: mapreduce
+        name: MapReduce
+        type: concept

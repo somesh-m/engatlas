@@ -8,4 +8,5 @@ children:
   - include: algorithms.yaml
   - include: performance.yaml
   - include: public-cloud.yaml
-  - include: design-patterns.yaml
+  - include: design-patterns-low.yaml
+  - include: software-architecture-pattern.yaml

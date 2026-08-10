@@ -52,7 +52,7 @@ children:
           - id: aos
             name: AOS
             type: concept
-          - id: soa
+          - id: soarray
             name: SOA
             type: concept
       - id: tiling
