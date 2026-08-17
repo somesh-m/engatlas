@@ -238,6 +238,21 @@ module.exports = function engineeringAtlasTaxonomyPlugin(context) {
   return {
     name: PLUGIN_NAME,
 
+    injectHtmlTags() {
+      return {
+        postBodyTags: [
+          {
+            tagName: 'script',
+            attributes: {
+              type: 'module',
+              src: 'https://static.cloudflareinsights.com/beacon.min.js',
+              'data-cf-beacon': '{"token": "34f86ca0cbe24bd5863e62f7b14eec57"}',
+            },
+          },
+        ],
+      };
+    },
+
     getPathsToWatch() {
       return [
         path.join(taxonomyDir, '**/*.yaml'),
