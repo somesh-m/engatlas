@@ -30,6 +30,7 @@ const config: Config = {
   projectName: 'engmap',
 
   onBrokenLinks: 'throw',
+  trailingSlash: false,
 
   markdown: {
     hooks: {
