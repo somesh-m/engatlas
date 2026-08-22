@@ -65,6 +65,35 @@
 .legend i[data-status='partial'] { background: #d08b00; }
 .legend i[data-status='planned'] { background: #7b8491; }
 
+.contributeLinks {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.contributeLinks a {
+  flex: 1 1 150px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ifm-color-primary) 10%, transparent);
+  color: var(--ifm-color-primary-light);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.contributeLinks a:hover {
+  border-color: var(--ifm-color-primary);
+  background: var(--ifm-color-primary);
+  color: #fff;
+  text-decoration: none;
+}
+
 .workspace {
   position: relative;
   width: 100%;

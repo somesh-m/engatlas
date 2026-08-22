@@ -7,23 +7,6 @@ const config: Config = {
   tagline: 'A growing map of software engineering concepts and technologies',
   favicon: 'img/favicon.svg',
 
-  headTags: [
-    {
-      tagName: 'script',
-      attributes: {type: 'application/ld+json'},
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'Engineering Atlas',
-        alternateName: 'Engineering Map',
-        url: 'https://engmap.dev/',
-        description:
-          'A visual map and learning library for software engineering concepts, technologies, and tradeoffs.',
-        inLanguage: 'en',
-      }),
-    },
-  ],
-
   url: 'https://engmap.dev',
   baseUrl: '/',
   organizationName: 'somesh-m',
@@ -54,6 +37,9 @@ const config: Config = {
           routeBasePath: 'learn',
         },
         blog: false,
+        sitemap: {
+          ignorePatterns: ['/atlas'],
+        },
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -64,11 +50,6 @@ const config: Config = {
   themeConfig: {
     image: 'img/engineering-atlas-social.png',
     metadata: [
-      {
-        name: 'keywords',
-        content:
-          'software engineering, system design, algorithms, databases, performance, engineering concepts',
-      },
       {name: 'twitter:card', content: 'summary_large_image'},
     ],
     colorMode: {
@@ -79,7 +60,7 @@ const config: Config = {
     navbar: {
       title: 'Engineering Atlas',
       items: [
-        {to: '/atlas', label: 'Atlas', position: 'left'},
+        {to: '/', label: 'Atlas', position: 'left'},
         // {to: '/learn/intro', label: 'Learn', position: 'left'},
         {
           href: 'https://github.com/somesh-m/engatlas',
@@ -94,8 +75,21 @@ const config: Config = {
         {
           title: 'Explore',
           items: [
-            {label: 'Interactive Atlas', to: '/atlas'},
+            {label: 'Interactive Atlas', to: '/'},
             // {label: 'Content Library', to: '/learn/intro'},
+          ],
+        },
+        {
+          title: 'Contribute',
+          items: [
+            {
+              label: 'Edit this page',
+              href: 'https://github.com/somesh-m/engatlas',
+            },
+            {
+              label: 'Suggest a topic',
+              href: 'https://github.com/somesh-m/engatlas/issues',
+            },
           ],
         },
       ],

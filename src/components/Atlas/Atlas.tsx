@@ -470,6 +470,22 @@ function AtlasCanvas() {
           <span><i data-status="partial" /> In progress</span>
           <span><i data-status="planned" /> Planned</span>
         </div>
+        <nav className={styles.contributeLinks} aria-label="Contribute to Engineering Atlas">
+          <a
+            href="https://github.com/somesh-m/engatlas"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Edit this page
+          </a>
+          <a
+            href="https://github.com/somesh-m/engatlas/issues"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Suggest a topic
+          </a>
+        </nav>
       </div>
 
       <div className={styles.workspace}>

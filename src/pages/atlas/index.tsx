@@ -1,76 +1,33 @@
-import React from 'react';
-import BrowserOnly from '@docusaurus/BrowserOnly';
+import React, {useEffect} from 'react';
 import Head from '@docusaurus/Head';
 import Link from '@docusaurus/Link';
-import {usePluginData} from '@docusaurus/useGlobalData';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import Layout from '@theme/Layout';
-import type {Taxonomy} from '../../components/Atlas/types';
-import styles from './styles.module.css';
 
-function AtlasLoading() {
-  return (
-    <div className={styles.loading}>
-      Loading interactive atlas…
-    </div>
-  );
-}
+export default function AtlasRedirectPage() {
+  const homeUrl = useBaseUrl('/');
 
-export default function AtlasPage() {
-  const taxonomy = usePluginData('engineering-atlas-taxonomy', undefined, {
-    failfast: false,
-  }) as Taxonomy | undefined;
-  const coveredTopics = (taxonomy?.nodes ?? []).filter((node) => node.doc);
+  useEffect(() => {
+    window.location.replace(homeUrl);
+  }, [homeUrl]);
 
   return (
     <Layout
-      title="Interactive Software Engineering Atlas"
-      description="Explore an interactive taxonomy of software engineering, from algorithms and system design to databases, performance, cloud, and developer technologies."
+      title="Engineering Atlas has moved"
+      description="The interactive Engineering Atlas is now available on the homepage."
       noFooter
     >
       <Head>
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'CollectionPage',
-            name: 'Interactive Software Engineering Atlas',
-            url: 'https://engmap.dev/atlas',
-            description:
-              'An interactive taxonomy of software engineering concepts and technologies.',
-            hasPart: coveredTopics.map((node) => ({
-              '@type': 'LearningResource',
-              name: node.label,
-              url: `https://engmap.dev${node.doc}`,
-            })),
-          })}
-        </script>
+        <meta name="robots" content="noindex,follow" />
+        <meta httpEquiv="refresh" content={`0;url=${homeUrl}`} />
+        <link rel="canonical" href="https://engmap.dev/" />
       </Head>
-      <main className={styles.main}>
-        <BrowserOnly fallback={<AtlasLoading />}>
-          {() => {
-            // Keep React Flow out of Docusaurus' server-rendering pass.
-            const Atlas = require('../../components/Atlas/Atlas').default;
-            return <Atlas />;
-          }}
-        </BrowserOnly>
+      <main className="container margin-vert--xl">
+        <h1>Engineering Atlas has moved</h1>
+        <p>
+          Continue to the <Link to="/">interactive Engineering Atlas</Link>.
+        </p>
       </main>
-      {coveredTopics.length > 0 && (
-        <section className={styles.topicIndex} aria-labelledby="topic-index-heading">
-          <div className="container">
-            <h1 id="topic-index-heading">Software engineering topics</h1>
-            <p>
-              Browse the interactive map above or jump directly into a written guide.
-            </p>
-            <ul className={styles.topicList}>
-              {coveredTopics.map((node) => (
-                <li key={node.id}>
-                  <Link to={node.doc!}>{node.label}</Link>
-                  {node.summary && <span>{node.summary}</span>}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
     </Layout>
   );
 }

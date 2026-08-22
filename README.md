@@ -20,7 +20,7 @@ npm install
 npm run start
 ```
 
-Then open the local URL printed by Docusaurus and visit `/atlas`.
+Then open the local URL printed by Docusaurus. The interactive atlas is served at `/`.
 
 ## The important separation
 
