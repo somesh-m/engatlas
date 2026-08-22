@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trie Animation — EngMap</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg:#0a0d13;
+    --panel:#111826;
+    --border:#273247;
+    --text:#eef3f8;
+    --muted:#8795a8;
+    --blue:#60a5fa;
+    --amber:#f59e0b;
+    --red:#ef4444;
+    --green:#34d399;
+    --cyan:#22d3ee;
+  }
+
+  body {
+    margin:0;
+    min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    display:flex;
+    justify-content:center;
+    padding:24px 14px 40px;
+  }
+
+  .wrap { width:min(1120px, 100%); }
+  h1 {
+    margin:0 0 6px;
+    font-size:clamp(1.55rem, 3vw, 2.15rem);
+    letter-spacing:-.03em;
+  }
+  .sub {
+    margin:0 0 16px;
+    color:var(--muted);
+    font-size:.96rem;
+  }
+  .sub strong { color:#fff; }
+
+  .card {
+    background:#0f151f;
+    border:1px solid var(--border);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 28px 80px rgba(0,0,0,.35);
+  }
+
+  .controls {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+    background:#111925;
+  }
+
+  button {
+    border:1px solid #344158;
+    background:#1a2432;
+    color:#dce5f0;
+    border-radius:9px;
+    padding:8px 13px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  button:hover { background:#222f40; }
+  button.primary {
+    background:#223b72;
+    border-color:#365a9e;
+    color:#c9d8ff;
+  }
+
+  .speed-wrap {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border:1px solid #2d3b50;
+    border-radius:10px;
+    background:#0f1722;
+    color:#9fb0c5;
+    font:800 .76rem ui-monospace, monospace;
+  }
+  .speed-wrap label { color:#c8d5e4; }
+  .speed-wrap select {
+    background:#172131;
+    color:#e6edf7;
+    border:1px solid #344158;
+    border-radius:8px;
+    padding:6px 8px;
+    font:800 .76rem ui-monospace, monospace;
+    outline:none;
+  }
+  .spacer { flex:1; }
+  .readout {
+    font:800 .76rem ui-monospace, monospace;
+    color:#95a2b5;
+  }
+  .readout b { color:#fff; }
+
+  .stage {
+    position:relative;
+    min-height:860px;
+    background:
+      radial-gradient(circle at 50% 15%, rgba(96,165,250,.08), transparent 24%),
+      radial-gradient(circle at 20% 78%, rgba(52,211,153,.05), transparent 28%),
+      #080c12;
+    padding:76px 18px 18px;
+    overflow:hidden;
+  }
+
+  .banner {
+    position:absolute;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    padding:10px 18px;
+    border-radius:999px;
+    border:1px solid #33445c;
+    background:#121b27;
+    color:#e4ecf5;
+    font:900 .82rem ui-monospace, monospace;
+    letter-spacing:.03em;
+    white-space:nowrap;
+    box-shadow:0 8px 25px rgba(0,0,0,.24);
+  }
+  .banner.insert { border-color:#86621c; background:#21190a; color:#ffd98a; }
+  .banner.search { border-color:#365a9e; background:#121a29; color:#cddcff; }
+  .banner.auto { border-color:#1d5d75; background:#0c1820; color:#97e6ff; }
+  .banner.ok { border-color:#276348; background:#0f2018; color:#96ecc6; }
+  .banner.fail { border-color:#873238; background:#211214; color:#ffb7bb; }
+
+  .panel {
+    background:#111926;
+    border:1px solid #28354a;
+    border-radius:16px;
+    padding:16px;
+    min-width:0;
+  }
+
+  .plot-panel {
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .plot-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .plot-title {
+    font:900 .92rem ui-monospace, monospace;
+    color:#dbe7f4;
+  }
+  .chips {
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .chip {
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid #314156;
+    background:#0d141d;
+    color:#9eb0c7;
+    font:800 .72rem ui-monospace, monospace;
+  }
+  .chip strong { color:#fff; }
+
+  .word-strip, .output-strip, .suggestion-strip {
+    background:#0b1119;
+    border:1px solid #2b394c;
+    border-radius:12px;
+    padding:12px;
+  }
+  .section-title {
+    font:900 .75rem ui-monospace, monospace;
+    color:#9fb0c5;
+    margin-bottom:10px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .word-grid {
+    display:grid;
+    grid-template-columns:1.2fr 1fr;
+    gap:10px;
+  }
+  .word-row {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+  }
+  .word-label {
+    color:#a7b5c7;
+    font:800 .76rem ui-monospace, monospace;
+    min-width:98px;
+  }
+  .word-pill {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:52px;
+    padding:8px 10px;
+    border-radius:10px;
+    border:1px solid #314156;
+    background:#101923;
+    color:#d6e1ee;
+    font:800 .82rem ui-monospace, monospace;
+    transition:.2s ease;
+  }
+  .word-pill.done {
+    border-color:#2d664f;
+    background:#102119;
+    color:#9df0bf;
+  }
+  .word-pill.current {
+    border-color:#9a6d20;
+    background:#21190a;
+    color:#ffe19f;
+    box-shadow:0 0 18px rgba(245,158,11,.16);
+  }
+  .word-pill.fail {
+    border-color:#8d3940;
+    background:#221114;
+    color:#ffbcc0;
+  }
+  .word-pill.auto {
+    border-color:#317188;
+    background:#0f1a23;
+    color:#a8e7ff;
+  }
+
+  .char-boxes {
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .char-box {
+    width:30px;
+    height:30px;
+    display:grid;
+    place-items:center;
+    border-radius:8px;
+    border:1px solid #2f4054;
+    background:#101923;
+    color:#b9c7d8;
+    font:900 .82rem ui-monospace, monospace;
+  }
+  .char-box.active {
+    border-color:#9a6d20;
+    background:#21190a;
+    color:#ffe19f;
+  }
+  .char-box.done {
+    border-color:#2d664f;
+    background:#102119;
+    color:#9df0bf;
+  }
+  .char-box.fail {
+    border-color:#8d3940;
+    background:#221114;
+    color:#ffbcc0;
+  }
+  .char-box.auto {
+    border-color:#317188;
+    background:#0f1a23;
+    color:#a8e7ff;
+  }
+
+  .plot-wrap {
+    position:relative;
+    background:#091018;
+    border:1px solid #29374b;
+    border-radius:14px;
+    overflow:hidden;
+    min-height:520px;
+  }
+  svg { width:100%; height:100%; display:block; }
+  .trie-edge {
+    stroke:#42546e;
+    stroke-width:3;
+    opacity:.22;
+    transition:.25s ease;
+  }
+  .trie-edge.visible { opacity:.95; }
+  .trie-edge.active {
+    stroke:var(--amber);
+    stroke-width:4;
+    opacity:1;
+    filter:drop-shadow(0 0 6px rgba(245,158,11,.35));
+  }
+  .trie-edge.auto-active {
+    stroke:var(--cyan);
+    stroke-width:4;
+    opacity:1;
+    filter:drop-shadow(0 0 6px rgba(34,211,238,.35));
+  }
+  .trie-node circle {
+    fill:#111926;
+    stroke:#355c86;
+    stroke-width:2.5;
+    transition:.25s ease;
+  }
+  .trie-node text {
+    fill:#eaf1f8;
+    font:900 18px ui-monospace, monospace;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+  .trie-node .sub-label {
+    fill:#8ea1b8;
+    font:700 11px ui-monospace, monospace;
+  }
+  .trie-node.hidden { opacity:0; }
+  .trie-node.visible { opacity:1; }
+  .trie-node.current circle {
+    fill:#21190a;
+    stroke:var(--amber);
+    stroke-width:3.2;
+    filter:drop-shadow(0 0 10px rgba(245,158,11,.35));
+  }
+  .trie-node.reuse circle {
+    fill:#101b2b;
+    stroke:var(--blue);
+    stroke-width:3;
+  }
+  .trie-node.terminal circle {
+    fill:#102018;
+    stroke:var(--green);
+    stroke-width:3;
+  }
+  .trie-node.search-ok circle {
+    fill:#102018;
+    stroke:var(--green);
+    stroke-width:3.2;
+    filter:drop-shadow(0 0 10px rgba(52,211,153,.28));
+  }
+  .trie-node.search-fail circle {
+    fill:#221114;
+    stroke:var(--red);
+    stroke-width:3.2;
+    filter:drop-shadow(0 0 10px rgba(239,68,68,.28));
+  }
+  .trie-node.auto-focus circle {
+    fill:#0f1a23;
+    stroke:var(--cyan);
+    stroke-width:3.2;
+    filter:drop-shadow(0 0 10px rgba(34,211,238,.28));
+  }
+  .terminal-dot {
+    fill:var(--green);
+    stroke:#dcfce7;
+    stroke-width:1.4;
+    opacity:0;
+  }
+  .terminal-dot.show { opacity:1; }
+
+  .output-nodes, .suggestion-list {
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .out-node, .suggestion-pill {
+    min-width:58px;
+    padding:8px 10px;
+    border-radius:10px;
+    background:#132131;
+    border:1px solid #355c86;
+    color:#d7e9ff;
+    text-align:center;
+    font:900 .82rem ui-monospace, monospace;
+  }
+  .out-node.latest {
+    background:#21190a;
+    border-color:#9a6d20;
+    color:#ffe1a1;
+    box-shadow:0 0 18px rgba(245,158,11,.18);
+  }
+  .suggestion-pill {
+    background:#0f1a23;
+    border-color:#317188;
+    color:#a8e7ff;
+  }
+  .suggestion-prefix {
+    color:#d6e2f0;
+    font:800 .8rem ui-monospace, monospace;
+    margin-bottom:10px;
+  }
+
+  .phase-note {
+    min-height:30px;
+    color:#91a0b4;
+    font-size:.9rem;
+    line-height:1.45;
+    text-align:center;
+  }
+
+  @media (max-width: 820px) {
+    .word-grid { grid-template-columns:1fr; }
+    .banner { white-space:normal; text-align:center; max-width:92%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Trie</h1>
+  <p class="sub"><strong>Trie</strong> stores strings character by character. Shared prefixes reuse the same path, terminal nodes mark full words, and prefixes can return autocomplete suggestions.</p>
+
+  <div class="card">
+    <div class="controls">
+      <button class="primary" id="playBtn">▶ Play</button>
+      <button id="stepBtn">Step</button>
+      <button id="resetBtn">Reset</button>
+      <div class="speed-wrap">
+        <label for="speedSelect">Speed</label>
+        <select id="speedSelect">
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+          <option value="3">3×</option>
+        </select>
+      </div>
+      <div class="spacer"></div>
+      <div class="readout">Step: <b id="stepNo">0</b>/<b id="totalSteps">0</b> · Inserted: <b id="insertCount">0</b> · Speed: <b id="speedReadout">1×</b></div>
+    </div>
+
+    <div class="stage">
+      <div class="banner" id="banner">Press Play</div>
+
+      <div class="panel plot-panel">
+        <div class="plot-head">
+          <div class="plot-title">Trie structure</div>
+          <div class="chips">
+            <div class="chip">Words = <strong>cat, car, dog, dot, date, goat</strong></div>
+            <div class="chip">Search = <strong>car, can, dog, goat</strong></div>
+            <div class="chip">Autocomplete = <strong>ca, do, g</strong></div>
+            <div class="chip" id="phaseChip">Phase = <strong>Idle</strong></div>
+          </div>
+        </div>
+
+        <div class="word-strip">
+          <div class="section-title">Words and current characters</div>
+          <div class="word-grid">
+            <div>
+              <div class="word-row" style="margin-bottom:10px;">
+                <div class="word-label">Insert</div>
+                <div id="insertWords" class="word-row"></div>
+              </div>
+              <div class="word-row" style="margin-bottom:10px;">
+                <div class="word-label">Search</div>
+                <div id="searchWords" class="word-row"></div>
+              </div>
+              <div class="word-row">
+                <div class="word-label">Autocomplete</div>
+                <div id="autoWords" class="word-row"></div>
+              </div>
+            </div>
+            <div>
+              <div class="word-label" style="margin-bottom:10px;">Current query</div>
+              <div id="charBoxes" class="char-boxes"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="plot-wrap">
+          <svg viewBox="0 0 1000 500" aria-label="Trie animation">
+            <g id="edgeLayer"></g>
+            <g id="nodeLayer"></g>
+          </svg>
+        </div>
+
+        <div class="output-strip">
+          <div class="section-title">Completed words / search result</div>
+          <div id="completedWords" class="output-nodes"></div>
+        </div>
+
+        <div class="suggestion-strip">
+          <div class="section-title">Autocomplete suggestions</div>
+          <div id="suggestionPrefix" class="suggestion-prefix">Prefix: —</div>
+          <div id="suggestionList" class="suggestion-list"></div>
+        </div>
+
+        <div class="phase-note" id="phaseNote">Insert words into the trie and reuse prefix paths when possible.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const INSERT_WORDS = ['cat', 'car', 'dog', 'dot', 'date', 'goat'];
+const SEARCH_WORDS = ['car', 'can', 'dog', 'goat'];
+const AUTO_WORDS = ['ca', 'do', 'g'];
+const NODE_META = {
+  ROOT:{x:500,y:54,label:'•', sub:'root'},
+  C:{x:220,y:140,label:'c'},
+  A1:{x:220,y:230,label:'a'},
+  T1:{x:165,y:320,label:'t'},
+  R1:{x:275,y:320,label:'r'},
+
+  D:{x:500,y:140,label:'d'},
+  A2:{x:420,y:230,label:'a'},
+  O1:{x:580,y:230,label:'o'},
+  T3:{x:420,y:320,label:'t'},
+  E2:{x:420,y:410,label:'e'},
+  G1:{x:525,y:320,label:'g'},
+  T2:{x:635,y:320,label:'t'},
+
+  G2:{x:780,y:140,label:'g'},
+  O2:{x:780,y:230,label:'o'},
+  A3:{x:780,y:320,label:'a'},
+  T4:{x:780,y:410,label:'t'}
+};
+const EDGES = [
+  ['ROOT','C'], ['C','A1'], ['A1','T1'], ['A1','R1'],
+  ['ROOT','D'], ['D','A2'], ['D','O1'], ['A2','T3'], ['T3','E2'], ['O1','G1'], ['O1','T2'],
+  ['ROOT','G2'], ['G2','O2'], ['O2','A3'], ['A3','T4']
+];
+
+const STEPS = [
+  { type:'insert-start', word:'cat', charIndex:0, note:'Start inserting "cat" from the root.', banner:'Insert word: cat', kind:'insert' },
+  { type:'create', word:'cat', charIndex:0, node:'C', edge:['ROOT','C'], note:'Create child c under the root.', banner:'Create node c', kind:'insert' },
+  { type:'create', word:'cat', charIndex:1, node:'A1', edge:['C','A1'], note:'Create child a under c.', banner:'Create node a', kind:'insert' },
+  { type:'create', word:'cat', charIndex:2, node:'T1', edge:['A1','T1'], note:'Create child t under a.', banner:'Create node t', kind:'insert' },
+  { type:'terminal', word:'cat', charIndex:2, node:'T1', note:'Mark t as terminal. The word "cat" is now stored.', banner:'Mark end of word: cat', kind:'ok' },
+
+  { type:'insert-start', word:'car', charIndex:0, note:'Start inserting "car". Shared prefix should be reused.', banner:'Insert word: car', kind:'insert' },
+  { type:'reuse', word:'car', charIndex:0, node:'C', edge:['ROOT','C'], note:'Reuse existing node c.', banner:'Reuse existing c', kind:'insert' },
+  { type:'reuse', word:'car', charIndex:1, node:'A1', edge:['C','A1'], note:'Reuse existing node a.', banner:'Reuse existing a', kind:'insert' },
+  { type:'create', word:'car', charIndex:2, node:'R1', edge:['A1','R1'], note:'Create child r under a.', banner:'Create node r', kind:'insert' },
+  { type:'terminal', word:'car', charIndex:2, node:'R1', note:'Mark r as terminal. The word "car" is now stored.', banner:'Mark end of word: car', kind:'ok' },
+
+  { type:'insert-start', word:'dog', charIndex:0, note:'Start inserting "dog".', banner:'Insert word: dog', kind:'insert' },
+  { type:'create', word:'dog', charIndex:0, node:'D', edge:['ROOT','D'], note:'Create child d under the root.', banner:'Create node d', kind:'insert' },
+  { type:'create', word:'dog', charIndex:1, node:'O1', edge:['D','O1'], note:'Create child o under d.', banner:'Create node o', kind:'insert' },
+  { type:'create', word:'dog', charIndex:2, node:'G1', edge:['O1','G1'], note:'Create child g under o.', banner:'Create node g', kind:'insert' },
+  { type:'terminal', word:'dog', charIndex:2, node:'G1', note:'Mark g as terminal. The word "dog" is now stored.', banner:'Mark end of word: dog', kind:'ok' },
+
+  { type:'insert-start', word:'dot', charIndex:0, note:'Start inserting "dot". Prefix d → o is already present.', banner:'Insert word: dot', kind:'insert' },
+  { type:'reuse', word:'dot', charIndex:0, node:'D', edge:['ROOT','D'], note:'Reuse existing node d.', banner:'Reuse existing d', kind:'insert' },
+  { type:'reuse', word:'dot', charIndex:1, node:'O1', edge:['D','O1'], note:'Reuse existing node o.', banner:'Reuse existing o', kind:'insert' },
+  { type:'create', word:'dot', charIndex:2, node:'T2', edge:['O1','T2'], note:'Create child t under o.', banner:'Create node t', kind:'insert' },
+  { type:'terminal', word:'dot', charIndex:2, node:'T2', note:'Mark t as terminal. The word "dot" is now stored.', banner:'Mark end of word: dot', kind:'ok' },
+
+  { type:'insert-start', word:'date', charIndex:0, note:'Start inserting "date". It will share the first letter d.', banner:'Insert word: date', kind:'insert' },
+  { type:'reuse', word:'date', charIndex:0, node:'D', edge:['ROOT','D'], note:'Reuse existing node d.', banner:'Reuse existing d', kind:'insert' },
+  { type:'create', word:'date', charIndex:1, node:'A2', edge:['D','A2'], note:'Create child a under d for the word date.', banner:'Create node a', kind:'insert' },
+  { type:'create', word:'date', charIndex:2, node:'T3', edge:['A2','T3'], note:'Create child t under a.', banner:'Create node t', kind:'insert' },
+  { type:'create', word:'date', charIndex:3, node:'E2', edge:['T3','E2'], note:'Create child e under t.', banner:'Create node e', kind:'insert' },
+  { type:'terminal', word:'date', charIndex:3, node:'E2', note:'Mark e as terminal. The word "date" is now stored.', banner:'Mark end of word: date', kind:'ok' },
+
+  { type:'insert-start', word:'goat', charIndex:0, note:'Start inserting "goat" from the root.', banner:'Insert word: goat', kind:'insert' },
+  { type:'create', word:'goat', charIndex:0, node:'G2', edge:['ROOT','G2'], note:'Create child g under the root.', banner:'Create node g', kind:'insert' },
+  { type:'create', word:'goat', charIndex:1, node:'O2', edge:['G2','O2'], note:'Create child o under g.', banner:'Create node o', kind:'insert' },
+  { type:'create', word:'goat', charIndex:2, node:'A3', edge:['O2','A3'], note:'Create child a under o.', banner:'Create node a', kind:'insert' },
+  { type:'create', word:'goat', charIndex:3, node:'T4', edge:['A3','T4'], note:'Create child t under a.', banner:'Create node t', kind:'insert' },
+  { type:'terminal', word:'goat', charIndex:3, node:'T4', note:'Mark t as terminal. The word "goat" is now stored.', banner:'Mark end of word: goat', kind:'ok' },
+
+  { type:'search-start', word:'car', charIndex:0, note:'Now search for "car" in the trie.', banner:'Search word: car', kind:'search' },
+  { type:'search-step', word:'car', charIndex:0, node:'C', edge:['ROOT','C'], note:'Follow c from the root.', banner:'Match c', kind:'search' },
+  { type:'search-step', word:'car', charIndex:1, node:'A1', edge:['C','A1'], note:'Then follow a.', banner:'Match a', kind:'search' },
+  { type:'search-hit', word:'car', charIndex:2, node:'R1', edge:['A1','R1'], note:'Reach r and it is terminal, so "car" exists.', banner:'Search hit: car', kind:'ok' },
+
+  { type:'search-start', word:'can', charIndex:0, note:'Now search for "can".', banner:'Search word: can', kind:'search' },
+  { type:'search-step', word:'can', charIndex:0, node:'C', edge:['ROOT','C'], note:'Follow c from the root.', banner:'Match c', kind:'search' },
+  { type:'search-step', word:'can', charIndex:1, node:'A1', edge:['C','A1'], note:'Then follow a.', banner:'Match a', kind:'search' },
+  { type:'search-miss', word:'can', charIndex:2, node:'A1', edge:null, note:'There is no child n after c → a, so "can" is not present.', banner:'Search miss: can', kind:'fail' },
+
+  { type:'search-start', word:'dog', charIndex:0, note:'Search for "dog".', banner:'Search word: dog', kind:'search' },
+  { type:'search-step', word:'dog', charIndex:0, node:'D', edge:['ROOT','D'], note:'Follow d from the root.', banner:'Match d', kind:'search' },
+  { type:'search-step', word:'dog', charIndex:1, node:'O1', edge:['D','O1'], note:'Then follow o.', banner:'Match o', kind:'search' },
+  { type:'search-hit', word:'dog', charIndex:2, node:'G1', edge:['O1','G1'], note:'Reach g and it is terminal, so "dog" exists.', banner:'Search hit: dog', kind:'ok' },
+
+  { type:'search-start', word:'goat', charIndex:0, note:'Search for "goat".', banner:'Search word: goat', kind:'search' },
+  { type:'search-step', word:'goat', charIndex:0, node:'G2', edge:['ROOT','G2'], note:'Follow g from the root.', banner:'Match g', kind:'search' },
+  { type:'search-step', word:'goat', charIndex:1, node:'O2', edge:['G2','O2'], note:'Then follow o.', banner:'Match o', kind:'search' },
+  { type:'search-step', word:'goat', charIndex:2, node:'A3', edge:['O2','A3'], note:'Then follow a.', banner:'Match a', kind:'search' },
+  { type:'search-hit', word:'goat', charIndex:3, node:'T4', edge:['A3','T4'], note:'Reach t and it is terminal, so "goat" exists.', banner:'Search hit: goat', kind:'ok' },
+
+  { type:'auto-start', word:'ca', charIndex:0, note:'Now use prefix "ca" for autocomplete.', banner:'Autocomplete prefix: ca', kind:'auto' },
+  { type:'auto-step', word:'ca', charIndex:0, node:'C', edge:['ROOT','C'], note:'Follow c from the root.', banner:'Prefix match c', kind:'auto' },
+  { type:'auto-step', word:'ca', charIndex:1, node:'A1', edge:['C','A1'], note:'Then follow a. Collect all words below this node.', banner:'Prefix match a', kind:'auto' },
+  { type:'auto-suggest', word:'ca', charIndex:1, node:'A1', suggestions:['cat', 'car'], note:'All terminal words under c → a are autocomplete suggestions.', banner:'Suggestions for ca', kind:'auto' },
+
+  { type:'auto-start', word:'do', charIndex:0, note:'Use prefix "do" for autocomplete.', banner:'Autocomplete prefix: do', kind:'auto' },
+  { type:'auto-step', word:'do', charIndex:0, node:'D', edge:['ROOT','D'], note:'Follow d from the root.', banner:'Prefix match d', kind:'auto' },
+  { type:'auto-step', word:'do', charIndex:1, node:'O1', edge:['D','O1'], note:'Then follow o. Collect all words below this node.', banner:'Prefix match o', kind:'auto' },
+  { type:'auto-suggest', word:'do', charIndex:1, node:'O1', suggestions:['dog', 'dot'], note:'All terminal words under d → o are autocomplete suggestions.', banner:'Suggestions for do', kind:'auto' },
+
+  { type:'auto-start', word:'g', charIndex:0, note:'Use prefix "g" for autocomplete.', banner:'Autocomplete prefix: g', kind:'auto' },
+  { type:'auto-step', word:'g', charIndex:0, node:'G2', edge:['ROOT','G2'], note:'Follow g from the root and collect all words below it.', banner:'Prefix match g', kind:'auto' },
+  { type:'auto-suggest', word:'g', charIndex:0, node:'G2', suggestions:['goat'], note:'Only one terminal word exists under this branch.', banner:'Suggestions for g', kind:'auto' }
+];
+
+const BASE_DELAY = 1600;
+
+const $ = id => document.getElementById(id);
+const playBtn = $('playBtn');
+const stepBtn = $('stepBtn');
+const resetBtn = $('resetBtn');
+const speedSelect = $('speedSelect');
+const speedReadout = $('speedReadout');
+const stepNo = $('stepNo');
+const totalSteps = $('totalSteps');
+const insertCount = $('insertCount');
+const banner = $('banner');
+const phaseChip = $('phaseChip');
+const phaseNote = $('phaseNote');
+const edgeLayer = $('edgeLayer');
+const nodeLayer = $('nodeLayer');
+const insertWordsEl = $('insertWords');
+const searchWordsEl = $('searchWords');
+const autoWordsEl = $('autoWords');
+const charBoxesEl = $('charBoxes');
+const completedWordsEl = $('completedWords');
+const suggestionPrefixEl = $('suggestionPrefix');
+const suggestionListEl = $('suggestionList');
+
+totalSteps.textContent = STEPS.length;
+
+let playing = false;
+let timer = null;
+let speed = 1;
+let stepIndex = -1;
+let visibleNodes = new Set(['ROOT']);
+let visibleEdges = new Set();
+let terminalNodes = new Set();
+let insertedWords = [];
+let latestSearch = [];
+let latestAutocomplete = null;
+
+function edgeKey(edge) {
+  return edge ? edge.join('-') : null;
+}
+
+function renderWordPills(current) {
+  insertWordsEl.innerHTML = INSERT_WORDS.map(word => {
+    let cls = 'word-pill';
+    if (insertedWords.includes(word)) cls += ' done';
+    if (current && current.word === word && current.type.startsWith('insert')) cls += ' current';
+    return `<div class="${cls}">${word}</div>`;
+  }).join('');
+
+  searchWordsEl.innerHTML = SEARCH_WORDS.map(word => {
+    let cls = 'word-pill';
+    const found = latestSearch.find(x => x.word === word);
+    if (found) cls += found.result ? ' done' : ' fail';
+    if (current && current.word === word && current.type.startsWith('search')) cls += ' current';
+    return `<div class="${cls}">${word}</div>`;
+  }).join('');
+
+  autoWordsEl.innerHTML = AUTO_WORDS.map(word => {
+    let cls = 'word-pill auto';
+    if (latestAutocomplete && latestAutocomplete.prefix === word) cls += ' done';
+    if (current && current.word === word && current.type.startsWith('auto')) cls += ' current';
+    return `<div class="${cls}">${word}</div>`;
+  }).join('');
+}
+
+function renderCharBoxes(current) {
+  if (!current || !current.word) {
+    charBoxesEl.innerHTML = '<div class="char-box">—</div>';
+    return;
+  }
+  const word = current.word;
+  charBoxesEl.innerHTML = [...word].map((ch, idx) => {
+    let cls = 'char-box';
+    if (idx < current.charIndex) cls += ' done';
+    if (idx === current.charIndex) cls += ' active';
+    if (current.type === 'search-miss' && idx === current.charIndex) cls += ' fail';
+    if (current.type.startsWith('auto')) cls += ' auto';
+    return `<div class="${cls}">${ch}</div>`;
+  }).join('');
+}
+
+function renderCompletedWords() {
+  const items = [...insertedWords, ...latestSearch.map(x => `${x.word}:${x.result ? '✓' : '✗'}`)];
+  completedWordsEl.innerHTML = items.map((item, idx) => {
+    const latest = idx === items.length - 1 ? ' latest' : '';
+    return `<div class="out-node${latest}">${item}</div>`;
+  }).join('');
+  insertCount.textContent = insertedWords.length;
+}
+
+function renderSuggestions() {
+  if (!latestAutocomplete) {
+    suggestionPrefixEl.textContent = 'Prefix: —';
+    suggestionListEl.innerHTML = '<div class="suggestion-pill">No suggestions yet</div>';
+    return;
+  }
+  suggestionPrefixEl.textContent = `Prefix: ${latestAutocomplete.prefix}`;
+  suggestionListEl.innerHTML = latestAutocomplete.suggestions.map(s => `<div class="suggestion-pill">${s}</div>`).join('');
+}
+
+function renderEdges(current) {
+  const active = current && current.edge ? edgeKey(current.edge) : null;
+  edgeLayer.innerHTML = EDGES.map(edge => {
+    const [from, to] = edge;
+    const a = NODE_META[from], b = NODE_META[to];
+    const visible = visibleEdges.has(edgeKey(edge));
+    let cls = 'trie-edge';
+    if (visible) cls += ' visible';
+    if (active === edgeKey(edge)) {
+      cls += current && current.type.startsWith('auto') ? ' auto-active' : ' active';
+    }
+    return `<line class="${cls}" x1="${a.x}" y1="${a.y+22}" x2="${b.x}" y2="${b.y-22}"></line>`;
+  }).join('');
+}
+
+function nodeClass(id, current) {
+  if (!visibleNodes.has(id)) return 'trie-node hidden';
+  let cls = 'trie-node visible';
+  if (terminalNodes.has(id)) cls += ' terminal';
+  if (current && current.node === id) {
+    if (current.type === 'reuse') cls += ' reuse';
+    else if (current.type === 'search-hit') cls += ' search-ok';
+    else if (current.type === 'search-miss') cls += ' search-fail';
+    else if (current.type.startsWith('auto')) cls += ' auto-focus';
+    else cls += ' current';
+  }
+  return cls;
+}
+
+function renderNodes(current) {
+  nodeLayer.innerHTML = Object.entries(NODE_META).map(([id, meta]) => {
+    const cls = nodeClass(id, current);
+    const terminal = terminalNodes.has(id) ? 'show' : '';
+    const rootSub = meta.sub ? `<text class="sub-label" y="27">${meta.sub}</text>` : '';
+    return `
+      <g class="${cls}" transform="translate(${meta.x},${meta.y})">
+        <circle r="22"></circle>
+        <text y="1">${meta.label}</text>
+        ${rootSub}
+        <circle class="terminal-dot ${terminal}" cx="15" cy="-15" r="5"></circle>
+      </g>
+    `;
+  }).join('');
+}
+
+function setBanner(text, kind='') {
+  banner.textContent = text;
+  banner.className = 'banner' + (kind ? ' ' + kind : '');
+}
+
+function phaseForStep(step) {
+  if (!step) return 'Idle';
+  if (step.type === 'create') return 'Create';
+  if (step.type === 'reuse') return 'Reuse';
+  if (step.type === 'terminal') return 'Terminal';
+  if (step.type.startsWith('search')) return 'Search';
+  if (step.type.startsWith('auto')) return 'Autocomplete';
+  if (step.type.startsWith('insert')) return 'Insert';
+  return 'Trie';
+}
+
+function renderStep() {
+  if (stepIndex < 0) {
+    stepNo.textContent = '0';
+    phaseChip.innerHTML = 'Phase = <strong>Idle</strong>';
+    phaseNote.textContent = 'Insert words into the trie and reuse prefix paths when possible.';
+    setBanner('Press Play');
+    renderWordPills(null);
+    renderCharBoxes(null);
+    renderCompletedWords();
+    renderSuggestions();
+    renderEdges(null);
+    renderNodes(null);
+    return;
+  }
+
+  const step = STEPS[stepIndex];
+  stepNo.textContent = String(stepIndex + 1);
+  phaseChip.innerHTML = `Phase = <strong>${phaseForStep(step)}</strong>`;
+  phaseNote.textContent = step.note;
+  setBanner(step.banner, step.kind);
+  renderWordPills(step);
+  renderCharBoxes(step);
+  renderCompletedWords();
+  renderSuggestions();
+  renderEdges(step);
+  renderNodes(step);
+}
+
+function applyStep(step) {
+  if (step.node && step.type !== 'search-miss') visibleNodes.add(step.node);
+  if (step.edge) visibleEdges.add(edgeKey(step.edge));
+  if (step.type === 'terminal' && step.node) {
+    terminalNodes.add(step.node);
+    if (!insertedWords.includes(step.word)) insertedWords.push(step.word);
+  }
+  if (step.type === 'search-hit') latestSearch.push({ word: step.word, result: true });
+  if (step.type === 'search-miss') latestSearch.push({ word: step.word, result: false });
+  if (step.type === 'auto-suggest') latestAutocomplete = { prefix: step.word, suggestions: step.suggestions };
+}
+
+function nextStep() {
+  if (stepIndex >= STEPS.length - 1) {
+    stop();
+    return;
+  }
+  stepIndex += 1;
+  applyStep(STEPS[stepIndex]);
+  renderStep();
+  if (stepIndex >= STEPS.length - 1) stop();
+}
+
+function currentDelay() {
+  return BASE_DELAY / speed;
+}
+
+function schedulePlayback() {
+  if (timer) clearInterval(timer);
+  timer = setInterval(nextStep, currentDelay());
+}
+
+function start() {
+  if (stepIndex >= STEPS.length - 1) reset();
+  playing = true;
+  playBtn.textContent = '❚❚ Pause';
+  nextStep();
+  schedulePlayback();
+}
+
+function stop() {
+  playing = false;
+  playBtn.textContent = '▶ Play';
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function reset() {
+  stop();
+  speed = Number(speedSelect.value || 1);
+  speedReadout.textContent = `${speed}×`;
+  stepIndex = -1;
+  visibleNodes = new Set(['ROOT']);
+  visibleEdges = new Set();
+  terminalNodes = new Set();
+  insertedWords = [];
+  latestSearch = [];
+  latestAutocomplete = null;
+  renderStep();
+}
+
+playBtn.addEventListener('click', () => playing ? stop() : start());
+stepBtn.addEventListener('click', () => {
+  stop();
+  nextStep();
+});
+resetBtn.addEventListener('click', reset);
+speedSelect.addEventListener('change', () => {
+  speed = Number(speedSelect.value);
+  speedReadout.textContent = `${speed}×`;
+  if (playing) schedulePlayback();
+});
+
+reset();
+</script>
+</body>
+</html>

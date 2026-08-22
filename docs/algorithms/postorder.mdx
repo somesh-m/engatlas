@@ -1,0 +1,49 @@
+---
+title: Post-order Traversal
+atlas_id: postorder
+description: A depth-first tree traversal that visits both subtrees before the current node.
+---
+
+# Post-order Traversal
+
+**Post-order traversal** is a depth-first traversal that visits the **left subtree**, then the **right subtree**, and finally the **current node**.
+
+The order is commonly remembered as **Left → Right → Root**.
+
+### Interactive Visualization
+
+Use the controls below to follow the traversal as it completes both subtrees before visiting their root.
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/postorder-traversal-animation.html"
+    title="Interactive post-order tree traversal animation"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>
+
+### Key Property
+
+Because a node is visited only after all of its descendants, post-order traversal processes a tree from the bottom up. It is well suited to tasks where a parent's result depends on results from its children.
+
+### Complexity
+
+- **Time:** `O(n)` because every node is visited once.
+- **Auxiliary space:** `O(h)`, where `h` is the tree height, for recursion or an explicit stack.
+- A balanced tree uses `O(log n)` auxiliary space, while a skewed tree may use `O(n)`.
+
+### Common Uses
+
+- Deleting or freeing a tree safely from leaves to root.
+- Calculating subtree sizes, heights, or aggregate values.
+- Producing postfix notation from an expression tree.
+- Evaluating an expression tree after evaluating its operands.
+- Solving bottom-up tree dynamic programming problems.
+
+### Remember
+
+- The root is always the last node visited.
+- Both child subtrees must be completed before processing their parent.
+- Iterative post-order traversal is less direct than iterative pre-order or in-order traversal because it must remember whether a node's children have already been processed.
+- A recursive traversal can exhaust the call stack on a very deep or skewed tree.

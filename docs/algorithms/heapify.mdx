@@ -1,0 +1,42 @@
+---
+title: Heapify
+atlas_id: heapify
+description: The process of restoring the heap property at a node or transforming a collection into a heap.
+---
+
+# Heapify
+
+**Heapify** restores the ordering rule of a binary heap. In a **max-heap**, every parent is at least as large as its children; in a **min-heap**, every parent is at most as large as its children.
+
+The term can refer to fixing the subtree rooted at one node or to transforming an entire collection into a valid heap.
+
+### Key Property
+
+When a node violates the heap property, it is compared with the appropriate child and moved downward until the property is restored. Only one root-to-leaf path can be affected.
+
+A complete binary tree is commonly stored in an array, so parent and child relationships can be found from indices without explicit pointers.
+
+### Complexity
+
+- **Heapifying one node:** `O(log n)` time in the worst case.
+- **Building a heap bottom-up:** `O(n)` time.
+- **Auxiliary space:** `O(1)` for an iterative array-based approach, or `O(log n)` when recursion uses the call stack.
+
+Building a heap is linear rather than `O(n log n)` because most nodes are close to the leaves and can move only a short distance.
+
+### Common Uses
+
+- Building a heap from an unsorted collection.
+- Restoring a heap after removing its root.
+- Supporting priority queue operations.
+- Sorting values with heapsort.
+- Maintaining the largest or smallest `k` values in a stream.
+- Selecting an extreme value repeatedly without fully sorting the input.
+
+### Remember
+
+- Heap order is weaker than full sorting; only parent-child relationships are guaranteed.
+- A single-node heapify assumes the affected node's child subtrees are already valid heaps.
+- Bottom-up heap construction starts from the last internal node because leaves already satisfy the heap property.
+- Use the larger child for a max-heap and the smaller child for a min-heap when deciding where a node should move.
+- Do not confuse moving a node downward after removal with moving a newly inserted node upward; both restore heap order, but they begin from different positions.

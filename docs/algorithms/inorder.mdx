@@ -1,0 +1,49 @@
+---
+title: In-order Traversal
+atlas_id: inorder
+description: A depth-first tree traversal that visits the left subtree, the current node, and then the right subtree.
+---
+
+# In-order Traversal
+
+**In-order traversal** is a depth-first traversal used mainly with binary trees. It visits the **left subtree**, then the **current node**, and finally the **right subtree**.
+
+The order is commonly remembered as **Left → Root → Right**.
+
+### Interactive Visualization
+
+Use the controls below to follow the traversal as it explores each left subtree before visiting its root and right subtree.
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/inorder-traversal-animation.html"
+    title="Interactive in-order tree traversal animation"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>
+
+### Key Property
+
+For a valid binary search tree, in-order traversal visits the keys in **nondecreasing order**. The traversal itself does not sort the values; the ordering comes from the binary search tree property.
+
+### Complexity
+
+- **Time:** `O(n)` because every node is visited once.
+- **Auxiliary space:** `O(h)`, where `h` is the tree height, for recursion or an explicit stack.
+- A balanced tree uses `O(log n)` auxiliary space, while a skewed tree may use `O(n)`.
+
+### Common Uses
+
+- Reading the keys of a binary search tree in sorted order.
+- Finding the kth-smallest key in a binary search tree.
+- Checking whether a binary tree satisfies binary search tree ordering.
+- Finding a node's in-order predecessor or successor.
+- Converting a binary search tree into a sorted sequence.
+
+### Remember
+
+- In-order traversal is naturally defined for **binary trees**.
+- Its output is sorted only when the tree is a valid binary search tree.
+- The placement rule for duplicate keys must be known when validating a binary search tree.
+- A recursive traversal can exhaust the call stack on a very deep or skewed tree.

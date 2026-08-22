@@ -125,6 +125,33 @@ children:
       - id: tree-traversal
         name: Tree Traversal
         type: category
+        children:
+          - id: treedfs
+            name: Depth First
+            type: category
+            children:
+              - id: inorder
+                name: In-order
+                type: concept
+              - id: preorder
+                name: Pre-order
+                type: concept
+              - id: postorder
+                name: Post-order
+                type: concept
+          - id: treebfs
+            name: Breadth First
+            type: category
+            children:
+              - id: levelorder
+                name: Level-order
+                type: concept
+      - id: prefixmatching
+        name: Trie
+        type: concept
+      - id: heapify
+        name: Heapify
+        type: concept
       - id: lowest-common-ancestor
         name: Lowest Common Ancestor
         type: category

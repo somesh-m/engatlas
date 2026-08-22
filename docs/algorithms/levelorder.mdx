@@ -1,0 +1,50 @@
+---
+title: Level-order Traversal
+atlas_id: levelorder
+description: A breadth-first tree traversal that visits nodes one level at a time from the root downward.
+---
+
+# Level-order Traversal
+
+**Level-order traversal** is a breadth-first traversal that visits nodes one level at a time, starting at the root and moving downward. Within each level, nodes are usually visited from left to right.
+
+Unlike pre-order, in-order, and post-order traversals, level-order traversal uses **breadth-first search** rather than depth-first search.
+
+### Interactive Visualization
+
+Use the controls below to follow the traversal as it processes the tree one level at a time.
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/levelorder-traversal-animation.html"
+    title="Interactive level-order tree traversal animation"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>
+
+### Key Property
+
+Nodes are visited in increasing distance from the root. A queue preserves this order by processing earlier-discovered nodes before their children.
+
+### Complexity
+
+- **Time:** `O(n)` because every node is visited once.
+- **Auxiliary space:** `O(w)`, where `w` is the tree's maximum width.
+- In the worst case, the queue may hold `O(n)` nodes at once.
+
+### Common Uses
+
+- Processing or displaying a tree one level at a time.
+- Finding the minimum depth of a tree.
+- Finding the nearest node that satisfies a condition.
+- Calculating per-level values such as sums, averages, or maximums.
+- Producing left-side or right-side views of a tree.
+- Connecting or comparing nodes on the same level.
+
+### Remember
+
+- The root is visited first, followed by all nodes at depth one, then depth two, and so on.
+- Record level boundaries when the result must be grouped by depth.
+- Auxiliary space depends on tree width rather than tree height.
+- The output is not generally sorted, even for a binary search tree.

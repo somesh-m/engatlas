@@ -1,0 +1,80 @@
+---
+title: Trie
+atlas_id: prefixmatching
+description: A tree-shaped data structure for storing strings and answering prefix-based queries efficiently.
+---
+
+# Trie
+
+A **trie**, or prefix tree, stores strings one symbol at a time. Each path from the root represents a prefix, and marked nodes identify the ends of complete strings.
+
+Strings with the same prefix share the same path. This allows lookup time to depend on the length of the query rather than the total number of stored strings.
+
+### Interactive Visualization
+
+Use the controls below to follow Trie insertion, exact search, and prefix-based autocomplete.
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/trie-animation.html"
+    title="Interactive Trie insertion and search animation"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>
+
+### Key Property
+
+Prefix matching follows the query through the trie one symbol at a time. If the entire prefix can be followed, every complete string below that point is a match.
+
+A separate end marker is essential because a string can be both a complete entry and a prefix of another entry.
+
+### Insert a String
+
+1. Start at the root.
+2. Read the string one symbol at a time.
+3. Follow the child link for the current symbol. If it does not exist, create it.
+4. Move to that child and repeat until every symbol has been processed.
+5. Mark the final node as the end of a complete string.
+
+Existing paths are reused, so strings with a common prefix share the same nodes.
+
+### Search for a String
+
+1. Start at the root.
+2. Follow the child link for each symbol in the query.
+3. If a required link is missing, the string is not stored.
+4. After processing every symbol, check the final node's end marker.
+5. The string is an exact match only when that marker is set.
+
+For a **prefix search**, the final end-marker check is unnecessary. Reaching the node for the last symbol is enough to prove that the prefix exists.
+
+### Complexity
+
+Let `L` be the length of the string or prefix.
+
+- **Insert:** `O(L)`
+- **Exact lookup:** `O(L)`
+- **Prefix check:** `O(L)`
+- **Listing matches:** `O(L + R)`, where `R` is the work required to visit and return matching results.
+- **Space:** proportional to the number of stored symbols, with savings when prefixes are shared.
+
+Actual performance depends on how child links are represented. Fixed arrays provide fast access but may waste space, while maps use memory more selectively with additional lookup overhead.
+
+### Common Uses
+
+- Autocomplete and search suggestions.
+- Dictionary and spell-checking systems.
+- Prefix-based filtering.
+- Longest-prefix matching, such as IP routing.
+- Word-game and board-search problems.
+- Lexicographic enumeration of stored strings.
+
+### Remember
+
+- A trie optimizes operations on prefixes, not arbitrary substrings.
+- Finding a prefix does not prove that the prefix is stored as a complete string; check the end marker for exact lookup.
+- Large alphabets can make tries memory-intensive.
+- Normalize case and character encoding consistently before insertion and lookup.
+- Compressed tries and radix trees reduce long chains of single-child nodes.
+- Deleting a string must preserve nodes that are still shared with other strings.

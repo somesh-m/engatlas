@@ -1,0 +1,49 @@
+---
+title: Pre-order Traversal
+atlas_id: preorder
+description: A depth-first tree traversal that visits the current node before its left and right subtrees.
+---
+
+# Pre-order Traversal
+
+**Pre-order traversal** is a depth-first traversal that visits the **current node** first, followed by the **left subtree** and then the **right subtree**.
+
+The order is commonly remembered as **Root → Left → Right**.
+
+### Interactive Visualization
+
+Use the controls below to follow the traversal as it visits each root before exploring its left and right subtrees.
+
+<div className="embedded-visualizer">
+  <iframe
+    src="/visualizers/preorder-traversal-animation.html"
+    title="Interactive pre-order tree traversal animation"
+    loading="lazy"
+    sandbox="allow-scripts"
+  />
+</div>
+
+### Key Property
+
+Because a node is visited before its descendants, pre-order traversal records the tree from the top down. This makes it useful when a parent must be processed before its children.
+
+### Complexity
+
+- **Time:** `O(n)` because every node is visited once.
+- **Auxiliary space:** `O(h)`, where `h` is the tree height, for recursion or an explicit stack.
+- A balanced tree uses `O(log n)` auxiliary space, while a skewed tree may use `O(n)`.
+
+### Common Uses
+
+- Creating a copy or serialization of a tree when null markers are included.
+- Producing prefix notation from an expression tree.
+- Listing hierarchical data with parents before their children.
+- Searching for a value near the root before exploring deeper nodes.
+- Applying an operation to an entire subtree from the top down.
+
+### Remember
+
+- The root is always the first node visited.
+- Pre-order traversal of a binary search tree is not generally sorted.
+- A traversal sequence alone may not uniquely reconstruct a tree; additional information is usually required.
+- A recursive traversal can exhaust the call stack on a very deep or skewed tree.
